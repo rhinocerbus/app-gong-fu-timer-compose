@@ -32,14 +32,8 @@ class MainViewModel @Inject constructor(
 	private val _steepingRoundRunningState = MutableStateFlow<Boolean>(false)
 	val steepingRoundRunningState: StateFlow<Boolean> = _steepingRoundRunningState
 
-	private val _startingSteepTimeMsState = MutableStateFlow<Long>(DEFAULT_INITIAL_STEEP_TIME_MS)
-	val startingSteepTimeMsState: StateFlow<Long> = _startingSteepTimeMsState
-
 	private val _targetSteepTimeMsState = MutableStateFlow<Long>(DEFAULT_INITIAL_STEEP_TIME_MS)
 	val targetSteepTimeMsState: StateFlow<Long> = _targetSteepTimeMsState
-
-	private val _steepRoundIntervalMsState = MutableStateFlow<Long>(DEFAULT_ADDITIONAL_STEEP_TIME_MS)
-	val steepRoundIntervalMsState: StateFlow<Long> = _steepRoundIntervalMsState
 
 	private val _steepRoundProgressMsState = MutableStateFlow<Long>(0)
 	val steepRoundProgressMsState: StateFlow<Long> = _steepRoundProgressMsState
@@ -51,13 +45,15 @@ class MainViewModel @Inject constructor(
 		_steepingRoundRunningState.value = false
 		_targetSteepTimeMsState.value = DEFAULT_INITIAL_STEEP_TIME_MS
 		_steepRoundProgressMsState.value = 0L
+		startTimeDropdownCoordinator.onSelectedOptionChanged(startTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_INITIAL_STEEP_TIME_MS })
+		additionalTimeDropdownCoordinator.onSelectedOptionChanged(additionalTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_ADDITIONAL_STEEP_TIME_MS })
 		timerJob?.cancel()
 	}
 
 	private var timerJob: Job? = null
 	fun startSteepingRound() {
 		if (targetSteepTimeMs <= -1) {
-			targetSteepTimeMs = DEFAULT_INITIAL_STEEP_TIME_MS
+			targetSteepTimeMs = startTimeOptions.firstOrNull { it.id == startTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs ?: DEFAULT_INITIAL_STEEP_TIME_MS
 		}
 		timerJob?.cancel()
 		timerJob = viewModelScope.launch {
@@ -65,10 +61,10 @@ class MainViewModel @Inject constructor(
 			_steepCountState.value += 1
 			tickerFlow(
 				durationMs = targetSteepTimeMs,
-				tickRateMs = 50L
+				tickRateMs = 33L
 			) {
 				_steepingRoundRunningState.value = false
-				targetSteepTimeMs += DEFAULT_ADDITIONAL_STEEP_TIME_MS
+				targetSteepTimeMs += additionalTimeOptions.firstOrNull { it.id == additionalTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs ?: DEFAULT_INITIAL_STEEP_TIME_MS
 				_targetSteepTimeMsState.value = targetSteepTimeMs
 			}
 				.collect { progress ->
@@ -99,7 +95,12 @@ class MainViewModel @Inject constructor(
 
 	val startTimeDropdownCoordinator = ReadOnlyDropdownCoordinator<Long>(
 		selectedOptionState = mutableStateOf(startTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_INITIAL_STEEP_TIME_MS }),
-		dropdownOptionsState = mutableStateOf(startTimeOptions)
+		dropdownOptionsState = mutableStateOf(startTimeOptions),
+		externalOnSelectedOptionChanged = { option ->
+			if(_steepCountState.value == 0) {
+				_targetSteepTimeMsState.value = startTimeOptions.firstOrNull { it.id == option?.id }?.timeValueMs ?: DEFAULT_INITIAL_STEEP_TIME_MS
+			}
+		}
 	)
 
 	private val additionalTimeOptions = listOf(
@@ -111,7 +112,8 @@ class MainViewModel @Inject constructor(
 
 	val additionalTimeDropdownCoordinator = ReadOnlyDropdownCoordinator<Long>(
 		selectedOptionState = mutableStateOf(additionalTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_ADDITIONAL_STEEP_TIME_MS }),
-		dropdownOptionsState = mutableStateOf(additionalTimeOptions)
+		dropdownOptionsState = mutableStateOf(additionalTimeOptions),
+
 	)
 
 	/////////////////////////////////////////////////

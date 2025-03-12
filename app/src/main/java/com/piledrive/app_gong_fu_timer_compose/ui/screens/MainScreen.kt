@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.piledrive.app_gong_fu_timer_compose.R
@@ -126,33 +127,43 @@ object MainScreen : NavRoute {
 		val steepProgress = steepRoundProgressState.collectAsState().value
 		val targetTime = targetSteepTimeState.collectAsState().value
 
+		val startTimeMs = initialTimeCoordinator.selectedOptionState
+
 		val amountW =
 			MeasureTextWidth("00000s", MaterialTheme.typography.bodySmall, TextPaint())
 
 		Column(modifier = modifier.padding(16.dp)) {
 			Row {
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-					Text("Initial steep time")
+					Text("Initial steep time", textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
 					Gap(8.dp)
-					ReadOnlyDropdownTextField(innerTextFieldModifier = Modifier.width(amountW.dp), coordinator = initialTimeCoordinator)
+					ReadOnlyDropdownTextField(
+						innerTextFieldModifier = Modifier.width(amountW.dp),
+						coordinator = initialTimeCoordinator,
+						enabled = steepRound == 0
+					)
 				}
 				Gap(12.dp)
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-					Text("Added time per round")
+					Text("Added time per round", textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
 					Gap(8.dp)
-					ReadOnlyDropdownTextField(innerTextFieldModifier = Modifier.width(amountW.dp), coordinator = additionalTimeCoordinator)
+					ReadOnlyDropdownTextField(
+						innerTextFieldModifier = Modifier.width(amountW.dp),
+						coordinator = additionalTimeCoordinator,
+						enabled = steepRound == 0
+					)
 				}
 			}
-			Gap(16.dp)
+			Gap(24.dp)
 			Row {
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-					Text("Current round")
+					Text("Current round", textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
 					Text("$steepRound")
 				}
 				Gap(12.dp)
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-					Text("Target steep time")
-					Text("${targetTime/1000L} seconds")
+					Text("Target steep time", textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
+					Text("${targetTime / 1000L} seconds")
 				}
 			}
 
