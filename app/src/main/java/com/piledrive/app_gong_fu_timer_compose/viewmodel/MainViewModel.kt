@@ -19,7 +19,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -27,20 +26,24 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
 	companion object {
-		const val STEEP_TIME_INTERVA_MSL = 5000
+		const val STEEP_TIME_INTERVAL_MS = 5000L
+		const val STEEP_TIME_INITIAL_MS = 20000L
 	}
 
-	private val _steepCountState = MutableStateFlow<Long>(0)
-	val steepCountState: StateFlow<Long> = _steepCountState
+	private val _steepCountState = MutableStateFlow<Int>(0)
+	val steepCountState: StateFlow<Int> = _steepCountState
 
 	private val _steepingRoundRunningState = MutableStateFlow<Boolean>(false)
 	val steepingRoundRunningState: StateFlow<Boolean> = _steepingRoundRunningState
 
-	private val _startingSteepTimeMsState = MutableStateFlow<Long>(20)
+	private val _startingSteepTimeMsState = MutableStateFlow<Long>(STEEP_TIME_INITIAL_MS)
 	val startingSteepTimeMsState: StateFlow<Long> = _startingSteepTimeMsState
 
-	private val _displayTimeMsState = MutableStateFlow<Long>(0)
-	val displayTimeMsState: StateFlow<Long> = _displayTimeMsState
+	private val _targetSteepTimeMsState = MutableStateFlow<Long>(STEEP_TIME_INITIAL_MS)
+	val targetSteepTimeMsState: StateFlow<Long> = _targetSteepTimeMsState
+
+	private val _steepRoundProgressMsState = MutableStateFlow<Long>(0)
+	val steepRoundProgressMsState: StateFlow<Long> = _steepRoundProgressMsState
 
 	private var targetSteepTimeMs = -1L
 
@@ -50,21 +53,23 @@ class MainViewModel @Inject constructor(
 	private var timerJob: Job? = null
 	fun startSteepingRound() {
 		if (targetSteepTimeMs <0 -1) {
-			targetSteepTimeMs = _startingSteepTimeMsState.value
+			targetSteepTimeMs = STEEP_TIME_INITIAL_MS
 		}
 		timerJob?.cancel()
 		timerJob = viewModelScope.launch {
 			_steepingRoundRunningState.value = true
+			_steepCountState.value += 1
 			tickerFlow(
 				durationMs = targetSteepTimeMs,
 				tickRateMs = 1000L
 			) {
 				_steepingRoundRunningState.value = false
-				_steepCountState.value += 1
+				targetSteepTimeMs += STEEP_TIME_INTERVAL_MS
+				_targetSteepTimeMsState.value = targetSteepTimeMs
 			}
-				.onEach { sec ->
+				.onEach { progress ->
 					withContext(Dispatchers.Main) {
-						_displayTimeMsState.value = sec
+						_steepRoundProgressMsState.value = progress
 					}
 				}
 		}
