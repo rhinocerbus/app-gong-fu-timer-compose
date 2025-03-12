@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -50,7 +49,12 @@ class MainViewModel @Inject constructor(
 
 	private var targetSteepTimeMs = -1L
 
-	suspend fun reloadContent() {
+	fun reset() {
+		_steepCountState.value = 0
+		_steepingRoundRunningState.value = false
+		_targetSteepTimeMsState.value = STEEP_TIME_INITIAL_MS
+		_steepRoundProgressMsState.value = 0L
+		timerJob?.cancel()
 	}
 
 	private var timerJob: Job? = null
@@ -86,7 +90,7 @@ class MainViewModel @Inject constructor(
 			while (currentCoroutineContext().isActive) {
 				runtimeMs = System.currentTimeMillis() - startTime
 				trySend(runtimeMs)
-				if(runtimeMs >= durationMs) {
+				if (runtimeMs >= durationMs) {
 					onFinished()
 					close()
 					return@callbackFlow
