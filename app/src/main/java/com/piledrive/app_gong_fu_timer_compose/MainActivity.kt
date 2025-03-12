@@ -5,8 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.material3.MaterialTheme
 import com.piledrive.app_gong_fu_timer_compose.ui.theme.SampleComposeTheme
+import com.piledrive.lib_compose_components.ui.theme.custom.AppTheme
 import com.piledrive.app_gong_fu_timer_compose.viewmodel.SampleViewModel
+import com.piledrive.lib_compose_components.ui.util.updateStatusBarColorCompose
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -18,7 +21,8 @@ class MainActivity : ComponentActivity() {
 		super.onCreate(savedInstanceState)
 		enableEdgeToEdge()
 		setContent {
-			SampleComposeTheme {
+			AppTheme {
+				updateStatusBarColorCompose(MaterialTheme.colorScheme.background)
 				//RootNavHost(viewModel, this.lifecycleScope)
 			}
 		}

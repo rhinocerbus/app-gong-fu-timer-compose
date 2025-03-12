@@ -4,3 +4,6 @@
 [submodule "lib-datastore"]
 	path = lib-datastore
 	url = git@github.com:rhinocerbus/lib-datastore.git
+[submodule "lib-compose-components"]
+	path = lib-compose-components
+	url = git@github.com:rhinocerbus/lib-compose-components.git
