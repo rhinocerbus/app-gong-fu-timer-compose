@@ -1,7 +1,7 @@
-package com.piledrive.template.viewmodel
+package com.piledrive.app_gong_fu_timer_compose.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.piledrive.template.repo.SampleRepo
+import com.piledrive.app_gong_fu_timer_compose.repo.SampleRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

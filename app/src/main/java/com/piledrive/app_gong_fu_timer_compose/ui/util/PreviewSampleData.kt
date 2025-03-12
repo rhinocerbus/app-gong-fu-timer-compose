@@ -1,4 +1,4 @@
-package com.piledrive.template.ui.util
+package com.piledrive.app_gong_fu_timer_compose.ui.util
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

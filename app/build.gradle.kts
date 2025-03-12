@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-	namespace = "com.piledrive.template"
+	namespace = "com.piledrive.app_gong_fu_timer_compose"
 	compileSdk = 35
 
 	defaultConfig {
-		applicationId = "com.piledrive.template"
+		applicationId = "com.piledrive.app_gong_fu_timer_compose"
 		minSdk = 27
 		targetSdk = 35
 		versionCode = 1

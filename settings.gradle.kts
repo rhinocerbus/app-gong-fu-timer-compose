@@ -21,7 +21,7 @@ dependencyResolutionManagement {
 	}
 }
 
-rootProject.name = "app-template"
+rootProject.name = "app-gong-fu-timer-compose"
 include(":app")
 // composite build config
 // list private library git submodules

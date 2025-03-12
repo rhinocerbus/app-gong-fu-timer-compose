@@ -1,4 +1,4 @@
-package com.piledrive.template.ui.theme
+package com.piledrive.app_gong_fu_timer_compose.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

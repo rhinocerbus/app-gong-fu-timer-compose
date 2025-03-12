@@ -1,4 +1,4 @@
-package com.piledrive.movies_sample_compose
+package com.piledrive.app_gong_fu_timer_compose
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
