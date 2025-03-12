@@ -15,6 +15,7 @@ import com.piledrive.app_gong_fu_timer_compose.ui.util.previewBooleanFlow
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewIntFlow
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewLongFlow
 import com.piledrive.app_gong_fu_timer_compose.viewmodel.MainViewModel
+import com.piledrive.lib_compose_components.ui.theme.custom.AppTheme
 import kotlinx.coroutines.flow.StateFlow
 
 object MainScreen : NavRoute {
@@ -69,7 +70,7 @@ object MainScreen : NavRoute {
 					if (steepRunning) {
 						CircularProgressIndicator(
 							progress = {
-								(steepProgress.toFloat()/targetTime.toFloat()).toFloat()
+								(steepProgress.toFloat() / targetTime.toFloat()).toFloat()
 							}
 						)
 					} else {
@@ -88,13 +89,15 @@ object MainScreen : NavRoute {
 @Preview
 @Composable
 fun MainPreview() {
-	MainScreen.drawContent(
-		previewLongFlow(),
-		previewLongFlow(),
-		previewIntFlow(),
-		previewBooleanFlow(),
-		previewLongFlow(),
-		previewLongFlow(),
-		onStartRound = {}
-	)
+	AppTheme {
+		MainScreen.drawContent(
+			previewLongFlow(),
+			previewLongFlow(),
+			previewIntFlow(),
+			previewBooleanFlow(),
+			previewLongFlow(),
+			previewLongFlow(),
+			onStartRound = {}
+		)
+	}
 }
