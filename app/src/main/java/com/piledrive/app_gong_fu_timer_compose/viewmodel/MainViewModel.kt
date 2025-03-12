@@ -42,6 +42,9 @@ class MainViewModel @Inject constructor(
 	private val _targetSteepTimeMsState = MutableStateFlow<Long>(STEEP_TIME_INITIAL_MS)
 	val targetSteepTimeMsState: StateFlow<Long> = _targetSteepTimeMsState
 
+	private val _steepRoundIntervalMsState = MutableStateFlow<Long>(STEEP_TIME_INTERVAL_MS)
+	val steepRoundIntervalMsState: StateFlow<Long> = _steepRoundIntervalMsState
+
 	private val _steepRoundProgressMsState = MutableStateFlow<Long>(0)
 	val steepRoundProgressMsState: StateFlow<Long> = _steepRoundProgressMsState
 
@@ -52,7 +55,7 @@ class MainViewModel @Inject constructor(
 
 	private var timerJob: Job? = null
 	fun startSteepingRound() {
-		if (targetSteepTimeMs <0 -1) {
+		if (targetSteepTimeMs <= -1) {
 			targetSteepTimeMs = STEEP_TIME_INITIAL_MS
 		}
 		timerJob?.cancel()
@@ -61,13 +64,13 @@ class MainViewModel @Inject constructor(
 			_steepCountState.value += 1
 			tickerFlow(
 				durationMs = targetSteepTimeMs,
-				tickRateMs = 1000L
+				tickRateMs = 50L
 			) {
 				_steepingRoundRunningState.value = false
 				targetSteepTimeMs += STEEP_TIME_INTERVAL_MS
 				_targetSteepTimeMsState.value = targetSteepTimeMs
 			}
-				.onEach { progress ->
+				.collect { progress ->
 					withContext(Dispatchers.Main) {
 						_steepRoundProgressMsState.value = progress
 					}
@@ -83,11 +86,12 @@ class MainViewModel @Inject constructor(
 			while (currentCoroutineContext().isActive) {
 				runtimeMs = System.currentTimeMillis() - startTime
 				trySend(runtimeMs)
-				delay(tickRateMs)
 				if(runtimeMs >= durationMs) {
 					onFinished()
 					close()
+					return@callbackFlow
 				}
+				delay(tickRateMs)
 			}
 		}.flowOn(Dispatchers.Default)
 			.distinctUntilChanged()
