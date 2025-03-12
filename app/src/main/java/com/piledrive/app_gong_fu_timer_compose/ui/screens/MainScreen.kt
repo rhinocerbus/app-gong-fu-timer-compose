@@ -5,16 +5,17 @@ package com.piledrive.app_gong_fu_timer_compose.ui.screens
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +33,7 @@ import com.piledrive.app_gong_fu_timer_compose.ui.util.previewIntFlow
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewLongFlow
 import com.piledrive.app_gong_fu_timer_compose.viewmodel.MainViewModel
 import com.piledrive.lib_compose_components.ui.appbar.TopAppBarWithOverflow
+import com.piledrive.lib_compose_components.ui.spacer.Gap
 import com.piledrive.lib_compose_components.ui.theme.custom.AppTheme
 import kotlinx.coroutines.flow.StateFlow
 
@@ -127,16 +129,18 @@ object MainScreen : NavRoute {
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
 					Text("Initial steep time: $initialSteep")
 				}
+				Gap(12.dp)
 
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
 					Text("Additional time per round: $steepRoundInterval")
 				}
 			}
-
+			Gap(12.dp)
 			Row {
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
 					Text("Current round: $steepRound")
 				}
+				Gap(12.dp)
 
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
 					Text("Target steep time: $targetTime")
