@@ -9,7 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.piledrive.app_gong_fu_timer_compose.ui.screens.MainScreen
-import com.piledrive.app_gong_fu_timer_compose.viewmodel.SampleViewModel
+import com.piledrive.app_gong_fu_timer_compose.viewmodel.MainViewModel
 
 interface NavRoute {
 	val routeValue: String
@@ -46,7 +46,7 @@ fun RootNavHost() {
 */
 
 		composable(route = MainScreen.routeValue) {
-			val viewModel: SampleViewModel = hiltViewModel<SampleViewModel>()
+			val viewModel: MainViewModel = hiltViewModel<MainViewModel>()
 			LaunchedEffect("load_content_on_launch") {
 				viewModel.reloadContent()
 			}
