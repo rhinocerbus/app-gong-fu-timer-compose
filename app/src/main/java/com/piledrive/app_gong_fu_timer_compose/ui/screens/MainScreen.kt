@@ -11,11 +11,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -59,6 +62,9 @@ object MainScreen : NavRoute {
 			onStartRound = {
 				viewModel.startSteepingRound()
 			},
+			onCancelRound = {
+				viewModel.cancelRound()
+			},
 			onReset = {
 				viewModel.reset()
 			}
@@ -74,6 +80,7 @@ object MainScreen : NavRoute {
 		steepRoundProgressState: StateFlow<Long>,
 		targetSteepTimeState: StateFlow<Long>,
 		onStartRound: () -> Unit,
+		onCancelRound: () -> Unit,
 		onReset: () -> Unit,
 	) {
 		Scaffold(
@@ -104,7 +111,8 @@ object MainScreen : NavRoute {
 						steepRunningState,
 						steepRoundProgressState,
 						targetSteepTimeState,
-						onStartRound
+						onStartRound,
+						onCancelRound
 					)
 				}
 			}
@@ -121,6 +129,7 @@ object MainScreen : NavRoute {
 		steepRoundProgressState: StateFlow<Long>,
 		targetSteepTimeState: StateFlow<Long>,
 		onStartRound: () -> Unit,
+		onCancelRound: () -> Unit,
 	) {
 		val steepRound = steepRoundState.collectAsState().value
 		val steepRunning = steepRunningState.collectAsState().value
@@ -156,12 +165,14 @@ object MainScreen : NavRoute {
 			Row {
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
 					Text("Current round", textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
-					Text("$steepRound")
+					Gap(8.dp)
+					Text("$steepRound", style = MaterialTheme.typography.headlineSmall)
 				}
 				Gap(12.dp)
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
 					Text("Target steep time", textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
-					Text("${targetTime / 1000L} seconds")
+					Gap(8.dp)
+					Text("${targetTime / 1000L} seconds", style = MaterialTheme.typography.headlineSmall)
 				}
 			}
 
@@ -181,6 +192,16 @@ object MainScreen : NavRoute {
 							(steepProgress.toFloat() / targetTime.toFloat()).toFloat()
 						}
 					)
+					Column(horizontalAlignment = Alignment.CenterHorizontally) {
+						Text(text = "${steepProgress/1000 + 1}", style = MaterialTheme.typography.headlineMedium)
+						Gap(8.dp)
+						IconButton(onClick = {
+							onCancelRound()
+						}) {
+							Icon(Icons.Default.Clear, "cancel current steeping")
+						}
+						Text(text = "Cancel")
+					}
 				} else {
 					Button(
 						modifier = Modifier
@@ -212,6 +233,7 @@ fun MainPreview() {
 			steepRoundProgressState = previewLongFlow(8000L),
 			targetSteepTimeState = previewLongFlow(20000L),
 			onStartRound = {},
+			onCancelRound = {},
 			onReset = {}
 		)
 	}

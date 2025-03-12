@@ -40,16 +40,6 @@ class MainViewModel @Inject constructor(
 
 	private var targetSteepTimeMs = -1L
 
-	fun reset() {
-		_steepCountState.value = 0
-		_steepingRoundRunningState.value = false
-		_targetSteepTimeMsState.value = DEFAULT_INITIAL_STEEP_TIME_MS
-		_steepRoundProgressMsState.value = 0L
-		startTimeDropdownCoordinator.onSelectedOptionChanged(startTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_INITIAL_STEEP_TIME_MS })
-		additionalTimeDropdownCoordinator.onSelectedOptionChanged(additionalTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_ADDITIONAL_STEEP_TIME_MS })
-		timerJob?.cancel()
-	}
-
 	private var timerJob: Job? = null
 	fun startSteepingRound() {
 		if (targetSteepTimeMs <= -1) {
@@ -74,6 +64,30 @@ class MainViewModel @Inject constructor(
 				}
 		}
 	}
+
+
+	//  region Cancel/reset rounds
+	/////////////////////////////////////////////////
+
+	fun cancelRound() {
+		if(!_steepingRoundRunningState.value) return
+		_steepingRoundRunningState.value = false
+		_steepCountState.value -= 1
+		_steepRoundProgressMsState.value = 0L
+	}
+
+	fun reset() {
+		_steepCountState.value = 0
+		_steepingRoundRunningState.value = false
+		_targetSteepTimeMsState.value = DEFAULT_INITIAL_STEEP_TIME_MS
+		_steepRoundProgressMsState.value = 0L
+		startTimeDropdownCoordinator.onSelectedOptionChanged(startTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_INITIAL_STEEP_TIME_MS })
+		additionalTimeDropdownCoordinator.onSelectedOptionChanged(additionalTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_ADDITIONAL_STEEP_TIME_MS })
+		timerJob?.cancel()
+	}
+
+	/////////////////////////////////////////////////
+	//  endregion
 
 
 	//  region Dropdown state/options
