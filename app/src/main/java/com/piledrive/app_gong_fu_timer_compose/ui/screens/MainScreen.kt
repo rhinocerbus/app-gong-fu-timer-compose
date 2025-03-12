@@ -2,20 +2,21 @@
 
 package com.piledrive.app_gong_fu_timer_compose.ui.screens
 
+import android.text.TextPaint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,8 +34,11 @@ import com.piledrive.app_gong_fu_timer_compose.ui.util.previewIntFlow
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewLongFlow
 import com.piledrive.app_gong_fu_timer_compose.viewmodel.MainViewModel
 import com.piledrive.lib_compose_components.ui.appbar.TopAppBarWithOverflow
+import com.piledrive.lib_compose_components.ui.dropdown.ReadOnlyDropdownTextField
+import com.piledrive.lib_compose_components.ui.dropdown.state.ReadOnlyDropdownCoordinator
 import com.piledrive.lib_compose_components.ui.spacer.Gap
 import com.piledrive.lib_compose_components.ui.theme.custom.AppTheme
+import com.piledrive.lib_compose_components.ui.util.MeasureTextWidth
 import kotlinx.coroutines.flow.StateFlow
 
 object MainScreen : NavRoute {
@@ -45,8 +49,8 @@ object MainScreen : NavRoute {
 		viewModel: MainViewModel,
 	) {
 		drawContent(
-			viewModel.startingSteepTimeMsState,
-			viewModel.steepRoundIntervalMsState,
+			viewModel.startTimeDropdownCoordinator,
+			viewModel.additionalTimeDropdownCoordinator,
 			viewModel.steepCountState,
 			viewModel.steepingRoundRunningState,
 			viewModel.steepRoundProgressMsState,
@@ -62,8 +66,8 @@ object MainScreen : NavRoute {
 
 	@Composable
 	fun drawContent(
-		initialSteepTimeState: StateFlow<Long>,
-		steepRoundIntervalState: StateFlow<Long>,
+		initialTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
+		additionalTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
 		steepRoundState: StateFlow<Int>,
 		steepRunningState: StateFlow<Boolean>,
 		steepRoundProgressState: StateFlow<Long>,
@@ -93,8 +97,8 @@ object MainScreen : NavRoute {
 				Box(modifier = Modifier.padding(innerPadding)) {
 					DrawBody(
 						Modifier,
-						initialSteepTimeState,
-						steepRoundIntervalState,
+						initialTimeCoordinator,
+						additionalTimeCoordinator,
 						steepRoundState,
 						steepRunningState,
 						steepRoundProgressState,
@@ -109,41 +113,46 @@ object MainScreen : NavRoute {
 	@Composable
 	private fun DrawBody(
 		modifier: Modifier = Modifier,
-		initialSteepTimeState: StateFlow<Long>,
-		steepRoundIntervalState: StateFlow<Long>,
+		initialTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
+		additionalTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
 		steepRoundState: StateFlow<Int>,
 		steepRunningState: StateFlow<Boolean>,
 		steepRoundProgressState: StateFlow<Long>,
 		targetSteepTimeState: StateFlow<Long>,
 		onStartRound: () -> Unit,
 	) {
-		val initialSteep = initialSteepTimeState.collectAsState().value
-		val steepRoundInterval = steepRoundIntervalState.collectAsState().value
 		val steepRound = steepRoundState.collectAsState().value
 		val steepRunning = steepRunningState.collectAsState().value
 		val steepProgress = steepRoundProgressState.collectAsState().value
 		val targetTime = targetSteepTimeState.collectAsState().value
 
+		val amountW =
+			MeasureTextWidth("00000s", MaterialTheme.typography.bodySmall, TextPaint())
+
 		Column(modifier = modifier.padding(16.dp)) {
 			Row {
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-					Text("Initial steep time: $initialSteep")
+					Text("Initial steep time")
+					Gap(8.dp)
+					ReadOnlyDropdownTextField(innerTextFieldModifier = Modifier.width(amountW.dp), coordinator = initialTimeCoordinator)
 				}
 				Gap(12.dp)
-
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-					Text("Additional time per round: $steepRoundInterval")
+					Text("Added time per round")
+					Gap(8.dp)
+					ReadOnlyDropdownTextField(innerTextFieldModifier = Modifier.width(amountW.dp), coordinator = additionalTimeCoordinator)
 				}
 			}
-			Gap(12.dp)
+			Gap(16.dp)
 			Row {
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-					Text("Current round: $steepRound")
+					Text("Current round")
+					Text("$steepRound")
 				}
 				Gap(12.dp)
-
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-					Text("Target steep time: $targetTime")
+					Text("Target steep time")
+					Text("${targetTime/1000L} seconds")
 				}
 			}
 
@@ -187,8 +196,8 @@ object MainScreen : NavRoute {
 fun MainPreview() {
 	AppTheme {
 		MainScreen.drawContent(
-			initialSteepTimeState = previewLongFlow(20000L),
-			steepRoundIntervalState = previewLongFlow(5000L),
+			initialTimeCoordinator = ReadOnlyDropdownCoordinator(),
+			additionalTimeCoordinator = ReadOnlyDropdownCoordinator(),
 			steepRoundState = previewIntFlow(1),
 			steepRunningState = previewBooleanFlow(true),
 			steepRoundProgressState = previewLongFlow(8000L),
