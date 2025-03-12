@@ -1,0 +1,6 @@
+[submodule "lib-retrofit-moshi"]
+	path = lib-retrofit-moshi
+	url = git@github.com:rhinocerbus/lib-retrofit-moshi.git
+[submodule "lib-datastore"]
+	path = lib-datastore
+	url = git@github.com:rhinocerbus/lib-datastore.git
