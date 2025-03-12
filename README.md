@@ -1,18 +1,9 @@
 # app-composite-build-template
 
-## Steps for fully converting from template
-### package changes
-find/replace/refactor "movies_sample_compose" or "movies-sample-compose"
+## Description
+App for managing a Gong Fu tea brewing session, which consists of several, short steepings after a longer initial steep.
+Timings for these steepings can vary with the type of tea, so presets are provided along with some standard baseline values.
 
-## adding private libraries
-find files with tag:
-// composite build config
-or values in gradle files with "template-fill"
-ex: applicationId = "com.whatever.template-fill"
-
-### add as git submodule (ex: through sourcetree)
-todo - steps, commands
-### add to gradle
-todo - steps, files, etc.
-settings.gradle.kts
-includeBuild("lib-retrofit-moshi")
+## Tech stack
+Just Compose, coroutines. 
+An additional layer of features could be added, including a local/remote db to store settings for tea types provided by the user, with local storage for last tea selected, plus tracking most-brewed teas. Since this is a personal-use tool, I don't particularly care to have that feature set at the momnet.
