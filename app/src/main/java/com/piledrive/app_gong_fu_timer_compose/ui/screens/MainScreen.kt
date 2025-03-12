@@ -5,20 +5,27 @@ package com.piledrive.app_gong_fu_timer_compose.ui.screens
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.piledrive.app_gong_fu_timer_compose.R
 import com.piledrive.app_gong_fu_timer_compose.ui.nav.NavRoute
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewBooleanFlow
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewIntFlow
@@ -144,15 +151,26 @@ object MainScreen : NavRoute {
 			) {
 				if (steepRunning) {
 					CircularProgressIndicator(
+						modifier = Modifier
+							.fillMaxWidth(0.8f)
+							.aspectRatio(1f),
+						strokeWidth = 12.dp,
 						progress = {
 							(steepProgress.toFloat() / targetTime.toFloat()).toFloat()
 						}
 					)
 				} else {
 					Button(
+						modifier = Modifier
+							.fillMaxWidth(0.8f)
+							.aspectRatio(1f),
 						onClick = { onStartRound() }
 					) {
-						Text("start next round")
+						Icon(
+							modifier = Modifier.fillMaxSize(0.75f),
+							imageVector = ImageVector.vectorResource(R.drawable.baseline_emoji_food_beverage_24),
+							contentDescription = "Start steep timer"
+						)
 					}
 				}
 			}
@@ -165,12 +183,12 @@ object MainScreen : NavRoute {
 fun MainPreview() {
 	AppTheme {
 		MainScreen.drawContent(
-			previewLongFlow(),
-			previewLongFlow(),
-			previewIntFlow(),
-			previewBooleanFlow(),
-			previewLongFlow(),
-			previewLongFlow(),
+			initialSteepTimeState = previewLongFlow(20000L),
+			steepRoundIntervalState = previewLongFlow(5000L),
+			steepRoundState = previewIntFlow(1),
+			steepRunningState = previewBooleanFlow(true),
+			steepRoundProgressState = previewLongFlow(8000L),
+			targetSteepTimeState = previewLongFlow(20000L),
 			onStartRound = {},
 			onReset = {}
 		)

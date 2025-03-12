@@ -5,16 +5,19 @@ import kotlinx.coroutines.flow.StateFlow
 
 
 fun previewBooleanFlow(
+	value: Boolean = false
 ): StateFlow<Boolean> {
-	return MutableStateFlow(false)
+	return MutableStateFlow(value)
 }
 
 fun previewIntFlow(
+	value: Int = 0
 ): StateFlow<Int> {
-	return MutableStateFlow(0)
+	return MutableStateFlow(value)
 }
 
 fun previewLongFlow(
+	value: Long = 0L
 ): StateFlow<Long> {
-	return MutableStateFlow(0L)
+	return MutableStateFlow(value)
 }
