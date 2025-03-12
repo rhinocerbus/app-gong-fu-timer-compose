@@ -97,7 +97,7 @@ object MainScreen : NavRoute {
 			content = { innerPadding ->
 				Box(modifier = Modifier.padding(innerPadding)) {
 					DrawBody(
-						Modifier,
+						Modifier.fillMaxSize(),
 						initialTimeCoordinator,
 						additionalTimeCoordinator,
 						steepRoundState,
@@ -126,8 +126,6 @@ object MainScreen : NavRoute {
 		val steepRunning = steepRunningState.collectAsState().value
 		val steepProgress = steepRoundProgressState.collectAsState().value
 		val targetTime = targetSteepTimeState.collectAsState().value
-
-		val startTimeMs = initialTimeCoordinator.selectedOptionState
 
 		val amountW =
 			MeasureTextWidth("00000s", MaterialTheme.typography.bodySmall, TextPaint())
