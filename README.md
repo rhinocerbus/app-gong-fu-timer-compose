@@ -1,4 +1,4 @@
-# app-composite-build-template
+# Gung Fu Brewing Timer
 
 ## Description
 App for managing a Gong Fu tea brewing session, which consists of several, short steepings after a longer initial steep.
