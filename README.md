@@ -1,4 +1,4 @@
-# Gung Fu Brewing Timer
+# Gong Fu Brewing Timer
 
 ## Description
 App for managing a Gong Fu tea brewing session, which consists of several, short steepings after a longer initial steep.
@@ -8,4 +8,8 @@ Completed in around 4 hours, including multipole ui design passes as well as add
 
 ## Tech stack
 Just Compose, coroutines. 
+
+## Todo:
+- [ ] keep screen on when timer is running
+- [ ] could use a sound or haptic when timer is done
 An additional layer of features could be added, including a local/remote db to store settings for tea types provided by the user, with local storage for last tea selected, plus tracking most-brewed teas. Since this is a personal-use tool, I don't particularly care to have that feature set at the momnet.
