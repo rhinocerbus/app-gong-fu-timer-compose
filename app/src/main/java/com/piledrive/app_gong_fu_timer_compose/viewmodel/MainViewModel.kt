@@ -3,6 +3,7 @@ package com.piledrive.app_gong_fu_timer_compose.viewmodel
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.piledrive.app_gong_fu_timer_compose.data.TimerPhase
 import com.piledrive.app_gong_fu_timer_compose.repo.SampleRepo
 import com.piledrive.app_gong_fu_timer_compose.util.tickerFlow
 import com.piledrive.lib_compose_components.ui.dropdown.state.DropdownOption
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Timer
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,11 +28,11 @@ class MainViewModel @Inject constructor(
 		const val DEFAULT_INITIAL_STEEP_TIME_MS = 20000L
 	}
 
+	private val _timerPhaseState = MutableStateFlow<TimerPhase>(TimerPhase.INITIAL)
+	val timerPhaseState: StateFlow<TimerPhase> = _timerPhaseState
+
 	private val _steepCountState = MutableStateFlow<Int>(0)
 	val steepCountState: StateFlow<Int> = _steepCountState
-
-	private val _steepingRoundRunningState = MutableStateFlow<Boolean>(false)
-	val steepingRoundRunningState: StateFlow<Boolean> = _steepingRoundRunningState
 
 	private val _targetSteepTimeMsState = MutableStateFlow<Long>(DEFAULT_INITIAL_STEEP_TIME_MS)
 	val targetSteepTimeMsState: StateFlow<Long> = _targetSteepTimeMsState
@@ -47,13 +49,13 @@ class MainViewModel @Inject constructor(
 		}
 		timerJob?.cancel()
 		timerJob = viewModelScope.launch {
-			_steepingRoundRunningState.value = true
+			_timerPhaseState.value = TimerPhase.RUNNING
 			_steepCountState.value += 1
 			tickerFlow(
 				durationMs = targetSteepTimeMs,
 				tickRateMs = 33L
 			) {
-				_steepingRoundRunningState.value = false
+				_timerPhaseState.value = TimerPhase.IDLE
 				targetSteepTimeMs += additionalTimeOptions.firstOrNull { it.id == additionalTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs ?: DEFAULT_INITIAL_STEEP_TIME_MS
 				_targetSteepTimeMsState.value = targetSteepTimeMs
 			}
@@ -70,15 +72,15 @@ class MainViewModel @Inject constructor(
 	/////////////////////////////////////////////////
 
 	fun cancelRound() {
-		if(!_steepingRoundRunningState.value) return
-		_steepingRoundRunningState.value = false
+		if(_timerPhaseState.value != TimerPhase.RUNNING) return
+		_timerPhaseState.value = TimerPhase.IDLE
 		_steepCountState.value -= 1
 		_steepRoundProgressMsState.value = 0L
 	}
 
 	fun reset() {
+		_timerPhaseState.value = TimerPhase.INITIAL
 		_steepCountState.value = 0
-		_steepingRoundRunningState.value = false
 		_targetSteepTimeMsState.value = DEFAULT_INITIAL_STEEP_TIME_MS
 		_steepRoundProgressMsState.value = 0L
 		startTimeDropdownCoordinator.onSelectedOptionChanged(startTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_INITIAL_STEEP_TIME_MS })

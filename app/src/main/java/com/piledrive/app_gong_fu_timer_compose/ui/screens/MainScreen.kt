@@ -32,10 +32,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.piledrive.app_gong_fu_timer_compose.R
+import com.piledrive.app_gong_fu_timer_compose.data.TimerPhase
 import com.piledrive.app_gong_fu_timer_compose.ui.nav.NavRoute
-import com.piledrive.app_gong_fu_timer_compose.ui.util.previewBooleanFlow
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewIntFlow
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewLongFlow
+import com.piledrive.app_gong_fu_timer_compose.ui.util.previewTimerPhaseFlow
 import com.piledrive.app_gong_fu_timer_compose.viewmodel.MainViewModel
 import com.piledrive.lib_compose_components.ui.appbar.TopAppBarWithOverflow
 import com.piledrive.lib_compose_components.ui.dropdown.ReadOnlyDropdownTextField
@@ -55,8 +56,8 @@ object MainScreen : NavRoute {
 		drawContent(
 			viewModel.startTimeDropdownCoordinator,
 			viewModel.additionalTimeDropdownCoordinator,
+			viewModel.timerPhaseState,
 			viewModel.steepCountState,
-			viewModel.steepingRoundRunningState,
 			viewModel.steepRoundProgressMsState,
 			viewModel.targetSteepTimeMsState,
 			onStartRound = {
@@ -75,8 +76,8 @@ object MainScreen : NavRoute {
 	fun drawContent(
 		initialTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
 		additionalTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
+		timerPhaseState: StateFlow<TimerPhase>,
 		steepRoundState: StateFlow<Int>,
-		steepRunningState: StateFlow<Boolean>,
 		steepRoundProgressState: StateFlow<Long>,
 		targetSteepTimeState: StateFlow<Long>,
 		onStartRound: () -> Unit,
@@ -107,8 +108,8 @@ object MainScreen : NavRoute {
 						Modifier.fillMaxSize(),
 						initialTimeCoordinator,
 						additionalTimeCoordinator,
+						timerPhaseState,
 						steepRoundState,
-						steepRunningState,
 						steepRoundProgressState,
 						targetSteepTimeState,
 						onStartRound,
@@ -124,15 +125,15 @@ object MainScreen : NavRoute {
 		modifier: Modifier = Modifier,
 		initialTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
 		additionalTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
+		timerPhaseState: StateFlow<TimerPhase>,
 		steepRoundState: StateFlow<Int>,
-		steepRunningState: StateFlow<Boolean>,
 		steepRoundProgressState: StateFlow<Long>,
 		targetSteepTimeState: StateFlow<Long>,
 		onStartRound: () -> Unit,
 		onCancelRound: () -> Unit,
 	) {
 		val steepRound = steepRoundState.collectAsState().value
-		val steepRunning = steepRunningState.collectAsState().value
+		val steepRunning = timerPhaseState.collectAsState().value == TimerPhase.RUNNING
 		val steepProgress = steepRoundProgressState.collectAsState().value
 		val targetTime = targetSteepTimeState.collectAsState().value
 
@@ -193,7 +194,7 @@ object MainScreen : NavRoute {
 						}
 					)
 					Column(horizontalAlignment = Alignment.CenterHorizontally) {
-						Text(text = "${steepProgress/1000 + 1}", style = MaterialTheme.typography.headlineMedium)
+						Text(text = "${steepProgress / 1000 + 1}", style = MaterialTheme.typography.headlineMedium)
 						Gap(8.dp)
 						IconButton(onClick = {
 							onCancelRound()
@@ -228,8 +229,8 @@ fun MainPreview() {
 		MainScreen.drawContent(
 			initialTimeCoordinator = ReadOnlyDropdownCoordinator(),
 			additionalTimeCoordinator = ReadOnlyDropdownCoordinator(),
+			timerPhaseState = previewTimerPhaseFlow(),
 			steepRoundState = previewIntFlow(1),
-			steepRunningState = previewBooleanFlow(true),
 			steepRoundProgressState = previewLongFlow(8000L),
 			targetSteepTimeState = previewLongFlow(20000L),
 			onStartRound = {},
