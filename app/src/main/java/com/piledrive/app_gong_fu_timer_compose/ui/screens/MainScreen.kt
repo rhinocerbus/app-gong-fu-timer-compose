@@ -3,6 +3,7 @@
 package com.piledrive.app_gong_fu_timer_compose.ui.screens
 
 import android.text.TextPaint
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,6 +46,7 @@ import com.piledrive.lib_compose_components.ui.spacer.Gap
 import com.piledrive.lib_compose_components.ui.theme.custom.AppTheme
 import com.piledrive.lib_compose_components.ui.util.MeasureTextWidth
 import kotlinx.coroutines.flow.StateFlow
+import kotlin.math.absoluteValue
 
 object MainScreen : NavRoute {
 	override val routeValue: String = "home"
@@ -78,7 +80,7 @@ object MainScreen : NavRoute {
 		additionalTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
 		timerPhaseState: StateFlow<TimerPhase>,
 		steepRoundState: StateFlow<Int>,
-		steepRoundProgressState: StateFlow<Long>,
+		timerRoundProgressState: StateFlow<Long>,
 		targetSteepTimeState: StateFlow<Long>,
 		onStartRound: () -> Unit,
 		onCancelRound: () -> Unit,
@@ -110,7 +112,7 @@ object MainScreen : NavRoute {
 						additionalTimeCoordinator,
 						timerPhaseState,
 						steepRoundState,
-						steepRoundProgressState,
+						timerRoundProgressState,
 						targetSteepTimeState,
 						onStartRound,
 						onCancelRound
@@ -127,14 +129,13 @@ object MainScreen : NavRoute {
 		additionalTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
 		timerPhaseState: StateFlow<TimerPhase>,
 		steepRoundState: StateFlow<Int>,
-		steepRoundProgressState: StateFlow<Long>,
+		timerRoundProgressState: StateFlow<Long>,
 		targetSteepTimeState: StateFlow<Long>,
 		onStartRound: () -> Unit,
 		onCancelRound: () -> Unit,
 	) {
 		val steepRound = steepRoundState.collectAsState().value
-		val steepRunning = timerPhaseState.collectAsState().value == TimerPhase.RUNNING
-		val steepProgress = steepRoundProgressState.collectAsState().value
+		val steepRunning = timerPhaseState.collectAsState().value.isActive
 		val targetTime = targetSteepTimeState.collectAsState().value
 
 		val amountW =
@@ -184,25 +185,15 @@ object MainScreen : NavRoute {
 				contentAlignment = Alignment.Center
 			) {
 				if (steepRunning) {
-					CircularProgressIndicator(
-						modifier = Modifier
+					DrawTimer(
+						Modifier
 							.fillMaxWidth(0.8f)
 							.aspectRatio(1f),
-						strokeWidth = 12.dp,
-						progress = {
-							(steepProgress.toFloat() / targetTime.toFloat()).toFloat()
-						}
+						timerPhaseState,
+						timerRoundProgressState,
+						targetSteepTimeState,
+						onCancelRound
 					)
-					Column(horizontalAlignment = Alignment.CenterHorizontally) {
-						Text(text = "${steepProgress / 1000 + 1}", style = MaterialTheme.typography.headlineMedium)
-						Gap(8.dp)
-						IconButton(onClick = {
-							onCancelRound()
-						}) {
-							Icon(Icons.Default.Clear, "cancel current steeping")
-						}
-						Text(text = "Cancel")
-					}
 				} else {
 					Button(
 						modifier = Modifier
@@ -220,6 +211,50 @@ object MainScreen : NavRoute {
 			}
 		}
 	}
+
+	@Composable
+	fun DrawTimer(
+		modifier: Modifier = Modifier,
+		timerPhaseState: StateFlow<TimerPhase>,
+		timerRoundProgressState: StateFlow<Long>,
+		targetSteepTimeState: StateFlow<Long>,
+		onCancelRound: () -> Unit
+	) {
+		val timerProgress = timerRoundProgressState.collectAsState().value
+		val targetTime = targetSteepTimeState.collectAsState().value
+		//val inCountdown = timerPhaseState.collectAsState().value == TimerPhase.COUNTDOWN
+		val inCountdown = timerProgress < 0
+
+		Log.d("UI", "prg: $timerProgress")
+
+		CircularProgressIndicator(
+			modifier = modifier,
+			strokeWidth = 12.dp,
+			progress = {
+				if (inCountdown) {
+					(timerProgress.absoluteValue.toFloat() % 1000f) / 1000f
+				} else {
+					(timerProgress.toFloat() / targetTime.toFloat())
+				}
+			}
+		)
+		Column(horizontalAlignment = Alignment.CenterHorizontally) {
+			if (inCountdown) {
+				// being reported from timer as -{countdown} -> 0
+				Text(text = "${timerProgress / 1000 - 1}...", style = MaterialTheme.typography.headlineMedium)
+			} else {
+				// cant decide if, after having the countdown, it's better to show 0 or go straight to 1
+				Text(text = "${timerProgress / 1000 /* = 1*/}", style = MaterialTheme.typography.headlineMedium)
+			}
+			Gap(8.dp)
+			IconButton(onClick = {
+				onCancelRound()
+			}) {
+				Icon(Icons.Default.Clear, "cancel current steeping")
+			}
+			Text(text = "Cancel")
+		}
+	}
 }
 
 @Preview
@@ -231,7 +266,7 @@ fun MainPreview() {
 			additionalTimeCoordinator = ReadOnlyDropdownCoordinator(),
 			timerPhaseState = previewTimerPhaseFlow(),
 			steepRoundState = previewIntFlow(1),
-			steepRoundProgressState = previewLongFlow(8000L),
+			timerRoundProgressState = previewLongFlow(8000L),
 			targetSteepTimeState = previewLongFlow(20000L),
 			onStartRound = {},
 			onCancelRound = {},

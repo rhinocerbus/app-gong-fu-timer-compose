@@ -1,7 +1,10 @@
 package com.piledrive.app_gong_fu_timer_compose.repo
 
 import com.piledrive.app_gong_fu_timer_compose.data.TimeOption
+import com.piledrive.app_gong_fu_timer_compose.util.TimerUpdate
 import com.piledrive.app_gong_fu_timer_compose.util.tickerFlowWithCountdown
+import com.piledrive.app_gong_fu_timer_compose.util.tickerFlowWithCountdownCallbacksOnly
+import com.piledrive.app_gong_fu_timer_compose.util.unifiedTickerFlowWithCountdown
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -12,6 +15,7 @@ class TimerRepo @Inject constructor(
 ) {
 	val DEFAULT_ADDITIONAL_STEEP_TIME_MS = 10000L
 	val DEFAULT_INITIAL_STEEP_TIME_MS = 20000L
+	val DEFAULT_INITIAL_DELAY_MS = 3000L
 
 	val startTimeOptions = listOf(
 		TimeOption(10, "10s", timeValueMs = 10000L),
@@ -41,6 +45,33 @@ class TimerRepo @Inject constructor(
 			onStarted = onStarted,
 			onDelayCompleted = onDelayCompleted,
 			onFinished = onFinished
+		)
+	}
+
+	fun startUnifiedTimerFlow(
+		delayMs: Long,
+		durationMs: Long,
+	): Flow<TimerUpdate> {
+		return unifiedTickerFlowWithCountdown(
+			initialDelayMs = delayMs,
+			durationMs = durationMs,
+			tickRateMs = 33L,
+		)
+	}
+
+	fun startCallbackOnlyTimer(
+	delayMs: Long,
+	durationMs: Long,
+	onStarted: () -> Unit,
+	onDelayCompleted: () -> Unit,
+	onFinished: () -> Unit,
+	onTick: (Long) -> Unit
+	): Flow<Unit> {
+		return tickerFlowWithCountdownCallbacksOnly(
+			initialDelayMs = delayMs,
+			durationMs = durationMs,
+			tickRateMs = 33L,
+			onStarted, onDelayCompleted, onFinished, onTick
 		)
 	}
 }

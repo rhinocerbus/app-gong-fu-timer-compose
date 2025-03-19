@@ -1,5 +1,6 @@
 package com.piledrive.app_gong_fu_timer_compose.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,12 +8,10 @@ import com.piledrive.app_gong_fu_timer_compose.data.TimerPhase
 import com.piledrive.app_gong_fu_timer_compose.repo.TimerRepo
 import com.piledrive.lib_compose_components.ui.dropdown.state.ReadOnlyDropdownCoordinator
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -45,7 +44,8 @@ class MainViewModel @Inject constructor(
 		timerJob?.cancel()
 		timerJob = viewModelScope.launch {
 
-			repo.startTimerFlow(
+			repo.startCallbackOnlyTimer(
+				delayMs = repo.DEFAULT_INITIAL_DELAY_MS,
 				durationMs = targetSteepTimeMs,
 				onStarted = {
 					_timerPhaseState.value = TimerPhase.COUNTDOWN
@@ -61,12 +61,12 @@ class MainViewModel @Inject constructor(
 					targetSteepTimeMs += repo.additionalTimeOptions.firstOrNull { it.id == additionalTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
 						?: repo.DEFAULT_INITIAL_STEEP_TIME_MS
 					_targetSteepTimeMsState.value = targetSteepTimeMs
-				}
-			).collect { progress ->
-				withContext(Dispatchers.Main) {
+				},
+				onTick = { progress ->
+					Log.d("VM", "prg: $progress")
 					_steepRoundProgressMsState.value = progress
 				}
-			}
+			).collect { }
 		}
 	}
 
