@@ -13,9 +13,9 @@ import javax.inject.Inject
 class TimerRepo @Inject constructor(
 	//private val settingsSource: LocalSettingsSource
 ) {
-	val DEFAULT_ADDITIONAL_STEEP_TIME_MS = 10000L
-	val DEFAULT_INITIAL_STEEP_TIME_MS = 20000L
-	val DEFAULT_INITIAL_DELAY_MS = 3000L
+	val defaultAdditionalRoundTimeMs = 10000L
+	val defaultInitialRoundTimeMs = 20000L
+	val defaultCountdownMs = 3000L
 
 	val startTimeOptions = listOf(
 		TimeOption(10, "10s", timeValueMs = 10000L),

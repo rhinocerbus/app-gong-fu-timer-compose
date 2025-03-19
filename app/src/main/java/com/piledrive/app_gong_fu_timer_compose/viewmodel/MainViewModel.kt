@@ -26,7 +26,7 @@ class MainViewModel @Inject constructor(
 	private val _steepCountState = MutableStateFlow<Int>(0)
 	val steepCountState: StateFlow<Int> = _steepCountState
 
-	private val _targetSteepTimeMsState = MutableStateFlow<Long>(repo.DEFAULT_INITIAL_STEEP_TIME_MS)
+	private val _targetSteepTimeMsState = MutableStateFlow<Long>(repo.defaultInitialRoundTimeMs)
 	val targetSteepTimeMsState: StateFlow<Long> = _targetSteepTimeMsState
 
 	private val _steepRoundProgressMsState = MutableStateFlow<Long>(0)
@@ -39,13 +39,12 @@ class MainViewModel @Inject constructor(
 		if (targetSteepTimeMs <= -1) {
 			targetSteepTimeMs =
 				repo.startTimeOptions.firstOrNull { it.id == startTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
-					?: repo.DEFAULT_INITIAL_STEEP_TIME_MS
+					?: repo.defaultInitialRoundTimeMs
 		}
 		timerJob?.cancel()
 		timerJob = viewModelScope.launch {
-
 			repo.startCallbackOnlyTimer(
-				delayMs = repo.DEFAULT_INITIAL_DELAY_MS,
+				delayMs = repo.defaultCountdownMs,
 				durationMs = targetSteepTimeMs,
 				onStarted = {
 					_timerPhaseState.value = TimerPhase.COUNTDOWN
@@ -59,7 +58,7 @@ class MainViewModel @Inject constructor(
 				onFinished = {
 					_timerPhaseState.value = TimerPhase.IDLE
 					targetSteepTimeMs += repo.additionalTimeOptions.firstOrNull { it.id == additionalTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
-						?: repo.DEFAULT_INITIAL_STEEP_TIME_MS
+						?: repo.defaultInitialRoundTimeMs
 					_targetSteepTimeMsState.value = targetSteepTimeMs
 				},
 				onTick = { progress ->
@@ -76,19 +75,20 @@ class MainViewModel @Inject constructor(
 
 	fun cancelRound() {
 		if (_timerPhaseState.value != TimerPhase.RUNNING) return
+		timerJob?.cancel()
 		_timerPhaseState.value = TimerPhase.IDLE
 		_steepCountState.value -= 1
 		_steepRoundProgressMsState.value = 0L
 	}
 
 	fun reset() {
+		timerJob?.cancel()
 		_timerPhaseState.value = TimerPhase.INITIAL
 		_steepCountState.value = 0
-		_targetSteepTimeMsState.value = repo.DEFAULT_INITIAL_STEEP_TIME_MS
+		_targetSteepTimeMsState.value = repo.defaultInitialRoundTimeMs
 		_steepRoundProgressMsState.value = 0L
-		startTimeDropdownCoordinator.onSelectedOptionChanged(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.DEFAULT_INITIAL_STEEP_TIME_MS })
-		additionalTimeDropdownCoordinator.onSelectedOptionChanged(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.DEFAULT_ADDITIONAL_STEEP_TIME_MS })
-		timerJob?.cancel()
+		startTimeDropdownCoordinator.onSelectedOptionChanged(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.defaultInitialRoundTimeMs })
+		additionalTimeDropdownCoordinator.onSelectedOptionChanged(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.defaultAdditionalRoundTimeMs })
 	}
 
 	/////////////////////////////////////////////////
@@ -99,18 +99,18 @@ class MainViewModel @Inject constructor(
 	/////////////////////////////////////////////////
 
 	val startTimeDropdownCoordinator = ReadOnlyDropdownCoordinator<Long>(
-		selectedOptionState = mutableStateOf(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.DEFAULT_INITIAL_STEEP_TIME_MS }),
+		selectedOptionState = mutableStateOf(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.defaultInitialRoundTimeMs }),
 		dropdownOptionsState = mutableStateOf(repo.startTimeOptions),
 		externalOnSelectedOptionChanged = { option ->
 			if (_steepCountState.value == 0) {
 				_targetSteepTimeMsState.value =
-					repo.startTimeOptions.firstOrNull { it.id == option?.id }?.timeValueMs ?: repo.DEFAULT_INITIAL_STEEP_TIME_MS
+					repo.startTimeOptions.firstOrNull { it.id == option?.id }?.timeValueMs ?: repo.defaultInitialRoundTimeMs
 			}
 		}
 	)
 
 	val additionalTimeDropdownCoordinator = ReadOnlyDropdownCoordinator<Long>(
-		selectedOptionState = mutableStateOf(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.DEFAULT_ADDITIONAL_STEEP_TIME_MS }),
+		selectedOptionState = mutableStateOf(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.defaultAdditionalRoundTimeMs }),
 		dropdownOptionsState = mutableStateOf(repo.additionalTimeOptions),
 	)
 
