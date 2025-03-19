@@ -79,7 +79,7 @@ fun tickerFlowWithCountdown(
 fun tickerFlowWithCountdownCallbacksOnly(
 	initialDelayMs: Long = 0,
 	durationMs: Long,
-	tickRateMs: Long = 33L,
+	tickRateMs: Long = 25L,
 	onStarted: () -> Unit,
 	onDelayCompleted: () -> Unit = {},
 	onFinished: () -> Unit,
@@ -131,7 +131,7 @@ class ProgressChange(val progressMs: Long) : TimerUpdate()
 fun unifiedTickerFlowWithCountdown(
 	initialDelayMs: Long = 0,
 	durationMs: Long,
-	tickRateMs: Long = 33L,
+	tickRateMs: Long = 25L,
 ): Flow<TimerUpdate> {
 	return callbackFlow {
 		// report as countdown (-3...-2...-1...0...+1...+2...)

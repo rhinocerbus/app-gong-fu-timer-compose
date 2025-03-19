@@ -41,7 +41,7 @@ class TimerRepo @Inject constructor(
 		return tickerFlowWithCountdown(
 			initialDelayMs = 3000L,
 			durationMs = durationMs,
-			tickRateMs = 33L,
+			tickRateMs = 25L,
 			onStarted = onStarted,
 			onDelayCompleted = onDelayCompleted,
 			onFinished = onFinished
@@ -55,7 +55,7 @@ class TimerRepo @Inject constructor(
 		return unifiedTickerFlowWithCountdown(
 			initialDelayMs = delayMs,
 			durationMs = durationMs,
-			tickRateMs = 33L,
+			tickRateMs = 25L,
 		)
 	}
 
@@ -70,7 +70,7 @@ class TimerRepo @Inject constructor(
 		return tickerFlowWithCountdownCallbacksOnly(
 			initialDelayMs = delayMs,
 			durationMs = durationMs,
-			tickRateMs = 33L,
+			tickRateMs = 25L,
 			onStarted, onDelayCompleted, onFinished, onTick
 		)
 	}
