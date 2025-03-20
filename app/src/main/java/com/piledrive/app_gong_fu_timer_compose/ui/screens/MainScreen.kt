@@ -40,8 +40,8 @@ import com.piledrive.app_gong_fu_timer_compose.ui.util.previewLongFlow
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewTimerPhaseFlow
 import com.piledrive.app_gong_fu_timer_compose.viewmodel.MainViewModel
 import com.piledrive.lib_compose_components.ui.appbar.TopAppBarWithOverflow
-import com.piledrive.lib_compose_components.ui.dropdown.ReadOnlyDropdownTextField
-import com.piledrive.lib_compose_components.ui.dropdown.state.ReadOnlyDropdownCoordinator
+import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownCoordinator
+import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownTextField
 import com.piledrive.lib_compose_components.ui.spacer.Gap
 import com.piledrive.lib_compose_components.ui.theme.custom.AppTheme
 import com.piledrive.lib_compose_components.ui.util.MeasureTextWidth
@@ -76,8 +76,8 @@ object MainScreen : NavRoute {
 
 	@Composable
 	fun drawContent(
-		initialTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
-		additionalTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
+		initialTimeCoordinator: ReadOnlyDropdownCoordinator,
+		additionalTimeCoordinator: ReadOnlyDropdownCoordinator,
 		timerPhaseState: StateFlow<TimerPhase>,
 		steepRoundState: StateFlow<Int>,
 		timerRoundProgressState: StateFlow<Long>,
@@ -125,8 +125,8 @@ object MainScreen : NavRoute {
 	@Composable
 	private fun DrawBody(
 		modifier: Modifier = Modifier,
-		initialTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
-		additionalTimeCoordinator: ReadOnlyDropdownCoordinator<Long>,
+		initialTimeCoordinator: ReadOnlyDropdownCoordinator,
+		additionalTimeCoordinator: ReadOnlyDropdownCoordinator,
 		timerPhaseState: StateFlow<TimerPhase>,
 		steepRoundState: StateFlow<Int>,
 		timerRoundProgressState: StateFlow<Long>,

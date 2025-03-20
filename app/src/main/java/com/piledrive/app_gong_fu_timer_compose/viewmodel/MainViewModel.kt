@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.piledrive.app_gong_fu_timer_compose.data.TimerPhase
 import com.piledrive.app_gong_fu_timer_compose.repo.TimerRepo
-import com.piledrive.lib_compose_components.ui.dropdown.state.ReadOnlyDropdownCoordinator
+import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownCoordinator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -87,8 +87,8 @@ class MainViewModel @Inject constructor(
 		_steepCountState.value = 0
 		_targetSteepTimeMsState.value = repo.defaultInitialRoundTimeMs
 		_steepRoundProgressMsState.value = 0L
-		startTimeDropdownCoordinator.onSelectedOptionChanged(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.defaultInitialRoundTimeMs })
-		additionalTimeDropdownCoordinator.onSelectedOptionChanged(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.defaultAdditionalRoundTimeMs })
+		startTimeDropdownCoordinator.onOptionSelected(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.defaultInitialRoundTimeMs })
+		additionalTimeDropdownCoordinator.onOptionSelected(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.defaultAdditionalRoundTimeMs })
 	}
 
 	/////////////////////////////////////////////////
@@ -98,10 +98,10 @@ class MainViewModel @Inject constructor(
 	//  region Dropdown state/options
 	/////////////////////////////////////////////////
 
-	val startTimeDropdownCoordinator = ReadOnlyDropdownCoordinator<Long>(
+	val startTimeDropdownCoordinator = ReadOnlyDropdownCoordinator(
 		selectedOptionState = mutableStateOf(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.defaultInitialRoundTimeMs }),
 		dropdownOptionsState = mutableStateOf(repo.startTimeOptions),
-		externalOnSelectedOptionChanged = { option ->
+		externalOnOptionSelected = { option ->
 			if (_steepCountState.value == 0) {
 				_targetSteepTimeMsState.value =
 					repo.startTimeOptions.firstOrNull { it.id == option?.id }?.timeValueMs ?: repo.defaultInitialRoundTimeMs
@@ -109,7 +109,7 @@ class MainViewModel @Inject constructor(
 		}
 	)
 
-	val additionalTimeDropdownCoordinator = ReadOnlyDropdownCoordinator<Long>(
+	val additionalTimeDropdownCoordinator = ReadOnlyDropdownCoordinator(
 		selectedOptionState = mutableStateOf(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.defaultAdditionalRoundTimeMs }),
 		dropdownOptionsState = mutableStateOf(repo.additionalTimeOptions),
 	)

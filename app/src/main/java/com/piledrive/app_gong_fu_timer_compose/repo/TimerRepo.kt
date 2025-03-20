@@ -18,18 +18,18 @@ class TimerRepo @Inject constructor(
 	val defaultCountdownMs = 3000L
 
 	val startTimeOptions = listOf(
-		TimeOption(10, "10s", timeValueMs = 10000L),
-		TimeOption(15, "15s", timeValueMs = 15000L),
-		TimeOption(20, "20s", timeValueMs = 20000L),
-		TimeOption(25, "25s", timeValueMs = 25000L),
-		TimeOption(30, "30s", timeValueMs = 30000L),
+		TimeOption("10s", timeValueMs = 10000L),
+		TimeOption("15s", timeValueMs = 15000L),
+		TimeOption("20s", timeValueMs = 20000L),
+		TimeOption("25s", timeValueMs = 25000L),
+		TimeOption("30s", timeValueMs = 30000L),
 	)
 
 	val additionalTimeOptions = listOf(
-		TimeOption(5, "5s", timeValueMs = 5000L),
-		TimeOption(10, "10s", timeValueMs = 10000L),
-		TimeOption(15, "15s", timeValueMs = 15000L),
-		TimeOption(20, "20s", timeValueMs = 20000L),
+		TimeOption("5s", timeValueMs = 5000L),
+		TimeOption("10s", timeValueMs = 10000L),
+		TimeOption("15s", timeValueMs = 15000L),
+		TimeOption("20s", timeValueMs = 20000L),
 	)
 
 	fun startTimerFlow(
@@ -60,12 +60,12 @@ class TimerRepo @Inject constructor(
 	}
 
 	fun startCallbackOnlyTimer(
-	delayMs: Long,
-	durationMs: Long,
-	onStarted: () -> Unit,
-	onDelayCompleted: () -> Unit,
-	onFinished: () -> Unit,
-	onTick: (Long) -> Unit
+		delayMs: Long,
+		durationMs: Long,
+		onStarted: () -> Unit,
+		onDelayCompleted: () -> Unit,
+		onFinished: () -> Unit,
+		onTick: (Long) -> Unit
 	): Flow<Unit> {
 		return tickerFlowWithCountdownCallbacksOnly(
 			initialDelayMs = delayMs,
