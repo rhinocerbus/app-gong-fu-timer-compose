@@ -48,6 +48,7 @@ class MainViewModel @Inject constructor(
 				durationMs = targetSteepTimeMs,
 				onStarted = {
 					_timerPhaseState.value = TimerPhase.COUNTDOWN
+					_keepScreenOnState.value = true
 				},
 				onDelayCompleted = {
 					_timerPhaseState.value = TimerPhase.RUNNING
@@ -60,6 +61,7 @@ class MainViewModel @Inject constructor(
 					targetSteepTimeMs += repo.additionalTimeOptions.firstOrNull { it.id == additionalTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
 						?: repo.defaultInitialRoundTimeMs
 					_targetSteepTimeMsState.value = targetSteepTimeMs
+					_keepScreenOnState.value = false
 				},
 				onTick = { progress ->
 					Log.d("VM", "prg: $progress")
@@ -79,6 +81,7 @@ class MainViewModel @Inject constructor(
 		_timerPhaseState.value = TimerPhase.IDLE
 		_steepCountState.value -= 1
 		_steepRoundProgressMsState.value = 0L
+		_keepScreenOnState.value = false
 	}
 
 	fun reset() {
@@ -89,6 +92,7 @@ class MainViewModel @Inject constructor(
 		_steepRoundProgressMsState.value = 0L
 		startTimeDropdownCoordinator.onOptionSelected(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.defaultInitialRoundTimeMs })
 		additionalTimeDropdownCoordinator.onOptionSelected(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.defaultAdditionalRoundTimeMs })
+		_keepScreenOnState.value = false
 	}
 
 	/////////////////////////////////////////////////
@@ -117,4 +121,14 @@ class MainViewModel @Inject constructor(
 	/////////////////////////////////////////////////
 	//  endregion
 
+
+	//  region Screen-On state
+	/////////////////////////////////////////////////
+
+	// could just go back to having an "isRunning" state now that the countdown ui state is based on negative progress, and roll this into that
+	private val _keepScreenOnState = MutableStateFlow<Boolean>(false)
+	val keepScreenOnState: StateFlow<Boolean> = _keepScreenOnState
+
+	/////////////////////////////////////////////////
+	//  endregion
 }
