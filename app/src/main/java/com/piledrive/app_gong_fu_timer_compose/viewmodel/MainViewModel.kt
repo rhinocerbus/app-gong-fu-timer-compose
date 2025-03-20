@@ -1,38 +1,32 @@
 package com.piledrive.app_gong_fu_timer_compose.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.piledrive.app_gong_fu_timer_compose.repo.SampleRepo
-import com.piledrive.app_gong_fu_timer_compose.util.tickerFlow
-import com.piledrive.lib_compose_components.ui.dropdown.state.DropdownOption
-import com.piledrive.lib_compose_components.ui.dropdown.state.ReadOnlyDropdownCoordinator
+import com.piledrive.app_gong_fu_timer_compose.data.TimerPhase
+import com.piledrive.app_gong_fu_timer_compose.repo.TimerRepo
+import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownCoordinator
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-	private val repo: SampleRepo
+	private val repo: TimerRepo
 ) : ViewModel() {
 
-	companion object {
-		const val DEFAULT_ADDITIONAL_STEEP_TIME_MS = 10000L
-		const val DEFAULT_INITIAL_STEEP_TIME_MS = 20000L
-	}
+
+	private val _timerPhaseState = MutableStateFlow<TimerPhase>(TimerPhase.INITIAL)
+	val timerPhaseState: StateFlow<TimerPhase> = _timerPhaseState
 
 	private val _steepCountState = MutableStateFlow<Int>(0)
 	val steepCountState: StateFlow<Int> = _steepCountState
 
-	private val _steepingRoundRunningState = MutableStateFlow<Boolean>(false)
-	val steepingRoundRunningState: StateFlow<Boolean> = _steepingRoundRunningState
-
-	private val _targetSteepTimeMsState = MutableStateFlow<Long>(DEFAULT_INITIAL_STEEP_TIME_MS)
+	private val _targetSteepTimeMsState = MutableStateFlow<Long>(repo.defaultInitialRoundTimeMs)
 	val targetSteepTimeMsState: StateFlow<Long> = _targetSteepTimeMsState
 
 	private val _steepRoundProgressMsState = MutableStateFlow<Long>(0)
@@ -43,25 +37,35 @@ class MainViewModel @Inject constructor(
 	private var timerJob: Job? = null
 	fun startSteepingRound() {
 		if (targetSteepTimeMs <= -1) {
-			targetSteepTimeMs = startTimeOptions.firstOrNull { it.id == startTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs ?: DEFAULT_INITIAL_STEEP_TIME_MS
+			targetSteepTimeMs =
+				repo.startTimeOptions.firstOrNull { it.id == startTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
+					?: repo.defaultInitialRoundTimeMs
 		}
 		timerJob?.cancel()
 		timerJob = viewModelScope.launch {
-			_steepingRoundRunningState.value = true
-			_steepCountState.value += 1
-			tickerFlow(
+			repo.startCallbackOnlyTimer(
+				delayMs = repo.defaultCountdownMs,
 				durationMs = targetSteepTimeMs,
-				tickRateMs = 33L
-			) {
-				_steepingRoundRunningState.value = false
-				targetSteepTimeMs += additionalTimeOptions.firstOrNull { it.id == additionalTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs ?: DEFAULT_INITIAL_STEEP_TIME_MS
-				_targetSteepTimeMsState.value = targetSteepTimeMs
-			}
-				.collect { progress ->
-					withContext(Dispatchers.Main) {
-						_steepRoundProgressMsState.value = progress
-					}
+				onStarted = {
+					_timerPhaseState.value = TimerPhase.COUNTDOWN
+				},
+				onDelayCompleted = {
+					_timerPhaseState.value = TimerPhase.RUNNING
+					// incr. on start so first press shows as first round in progress, 1-based counting in ui
+					// was originally done at timer start, now after the countdown feels right
+					_steepCountState.value += 1
+				},
+				onFinished = {
+					_timerPhaseState.value = TimerPhase.IDLE
+					targetSteepTimeMs += repo.additionalTimeOptions.firstOrNull { it.id == additionalTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
+						?: repo.defaultInitialRoundTimeMs
+					_targetSteepTimeMsState.value = targetSteepTimeMs
+				},
+				onTick = { progress ->
+					Log.d("VM", "prg: $progress")
+					_steepRoundProgressMsState.value = progress
 				}
+			).collect { }
 		}
 	}
 
@@ -70,20 +74,21 @@ class MainViewModel @Inject constructor(
 	/////////////////////////////////////////////////
 
 	fun cancelRound() {
-		if(!_steepingRoundRunningState.value) return
-		_steepingRoundRunningState.value = false
+		if (_timerPhaseState.value != TimerPhase.RUNNING) return
+		timerJob?.cancel()
+		_timerPhaseState.value = TimerPhase.IDLE
 		_steepCountState.value -= 1
 		_steepRoundProgressMsState.value = 0L
 	}
 
 	fun reset() {
-		_steepCountState.value = 0
-		_steepingRoundRunningState.value = false
-		_targetSteepTimeMsState.value = DEFAULT_INITIAL_STEEP_TIME_MS
-		_steepRoundProgressMsState.value = 0L
-		startTimeDropdownCoordinator.onSelectedOptionChanged(startTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_INITIAL_STEEP_TIME_MS })
-		additionalTimeDropdownCoordinator.onSelectedOptionChanged(additionalTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_ADDITIONAL_STEEP_TIME_MS })
 		timerJob?.cancel()
+		_timerPhaseState.value = TimerPhase.INITIAL
+		_steepCountState.value = 0
+		_targetSteepTimeMsState.value = repo.defaultInitialRoundTimeMs
+		_steepRoundProgressMsState.value = 0L
+		startTimeDropdownCoordinator.onOptionSelected(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.defaultInitialRoundTimeMs })
+		additionalTimeDropdownCoordinator.onOptionSelected(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.defaultAdditionalRoundTimeMs })
 	}
 
 	/////////////////////////////////////////////////
@@ -93,41 +98,20 @@ class MainViewModel @Inject constructor(
 	//  region Dropdown state/options
 	/////////////////////////////////////////////////
 
-	class TimeOption(
-		override val id: Long,
-		override val textValue: String?,
-		val timeValueMs: Long
-	) : DropdownOption<Long>
-
-	private val startTimeOptions = listOf(
-		TimeOption(10, "10s", timeValueMs = 10000L),
-		TimeOption(15, "15s", timeValueMs = 15000L),
-		TimeOption(20, "20s", timeValueMs = 20000L),
-		TimeOption(25, "25s", timeValueMs = 25000L),
-		TimeOption(30, "30s", timeValueMs = 30000L),
-	)
-
-	val startTimeDropdownCoordinator = ReadOnlyDropdownCoordinator<Long>(
-		selectedOptionState = mutableStateOf(startTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_INITIAL_STEEP_TIME_MS }),
-		dropdownOptionsState = mutableStateOf(startTimeOptions),
-		externalOnSelectedOptionChanged = { option ->
-			if(_steepCountState.value == 0) {
-				_targetSteepTimeMsState.value = startTimeOptions.firstOrNull { it.id == option?.id }?.timeValueMs ?: DEFAULT_INITIAL_STEEP_TIME_MS
+	val startTimeDropdownCoordinator = ReadOnlyDropdownCoordinator(
+		selectedOptionState = mutableStateOf(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.defaultInitialRoundTimeMs }),
+		dropdownOptionsState = mutableStateOf(repo.startTimeOptions),
+		externalOnOptionSelected = { option ->
+			if (_steepCountState.value == 0) {
+				_targetSteepTimeMsState.value =
+					repo.startTimeOptions.firstOrNull { it.id == option?.id }?.timeValueMs ?: repo.defaultInitialRoundTimeMs
 			}
 		}
 	)
 
-	private val additionalTimeOptions = listOf(
-		TimeOption(5, "5s", timeValueMs = 5000L),
-		TimeOption(10, "10s", timeValueMs = 10000L),
-		TimeOption(15, "15s", timeValueMs = 15000L),
-		TimeOption(20, "20s", timeValueMs = 20000L),
-	)
-
-	val additionalTimeDropdownCoordinator = ReadOnlyDropdownCoordinator<Long>(
-		selectedOptionState = mutableStateOf(additionalTimeOptions.firstOrNull { it.timeValueMs == DEFAULT_ADDITIONAL_STEEP_TIME_MS }),
-		dropdownOptionsState = mutableStateOf(additionalTimeOptions),
-
+	val additionalTimeDropdownCoordinator = ReadOnlyDropdownCoordinator(
+		selectedOptionState = mutableStateOf(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.defaultAdditionalRoundTimeMs }),
+		dropdownOptionsState = mutableStateOf(repo.additionalTimeOptions),
 	)
 
 	/////////////////////////////////////////////////
