@@ -9,7 +9,8 @@ Completed in around 4 hours, including multipole ui design passes as well as add
 ## Tech stack
 Just Compose, coroutines. 
 
-## Todo:
+## Additional todo:
+- [x] add a countdown for the round starting to give time to start pouring water after click
 - [ ] keep screen on when timer is running
 - [ ] could use a sound or haptic when timer is done
 An additional layer of features could be added, including a local/remote db to store settings for tea types provided by the user, with local storage for last tea selected, plus tracking most-brewed teas. Since this is a personal-use tool, I don't particularly care to have that feature set at the momnet.
