@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.piledrive.app_gong_fu_timer_compose.data.TimerPhase
 import com.piledrive.app_gong_fu_timer_compose.repo.TimerRepo
+import com.piledrive.app_gong_fu_timer_compose.ui.screens.MainScreenCoordinator
 import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownCoordinator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -19,18 +20,30 @@ class MainViewModel @Inject constructor(
 	private val repo: TimerRepo
 ) : ViewModel() {
 
+	val coordinator: MainScreenCoordinator = object : MainScreenCoordinator {
+		override val startTimeDropdownCoordinator: ReadOnlyDropdownCoordinator
+			get() = _startTimeDropdownCoordinator
+		override val additionalTimeDropdownCoordinator: ReadOnlyDropdownCoordinator
+			get() = _additionalTimeDropdownCoordinator
+		override val timerPhaseState: StateFlow<TimerPhase>
+			get() = _timerPhaseState
+		override val steepCountState: StateFlow<Int>
+			get() = _steepCountState
+		override val targetSteepTimeMsState: StateFlow<Long>
+			get() = _targetSteepTimeMsState
+		override val steepRoundProgressMsState: StateFlow<Long>
+			get() = _steepRoundProgressMsState
+		override val keepScreenOnState: StateFlow<Boolean>
+			get() = _keepScreenOnState
+		override val onStartRound: () -> Unit = { startSteepingRound() }
+		override val onCancelRound: () -> Unit = { cancelRound() }
+		override val onReset: () -> Unit = { reset() }
+	}
 
 	private val _timerPhaseState = MutableStateFlow<TimerPhase>(TimerPhase.INITIAL)
-	val timerPhaseState: StateFlow<TimerPhase> = _timerPhaseState
-
 	private val _steepCountState = MutableStateFlow<Int>(0)
-	val steepCountState: StateFlow<Int> = _steepCountState
-
 	private val _targetSteepTimeMsState = MutableStateFlow<Long>(repo.defaultInitialRoundTimeMs)
-	val targetSteepTimeMsState: StateFlow<Long> = _targetSteepTimeMsState
-
 	private val _steepRoundProgressMsState = MutableStateFlow<Long>(0)
-	val steepRoundProgressMsState: StateFlow<Long> = _steepRoundProgressMsState
 
 	private var targetSteepTimeMs = -1L
 
@@ -38,7 +51,7 @@ class MainViewModel @Inject constructor(
 	fun startSteepingRound() {
 		if (targetSteepTimeMs <= -1) {
 			targetSteepTimeMs =
-				repo.startTimeOptions.firstOrNull { it.id == startTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
+				repo.startTimeOptions.firstOrNull { it.id == _startTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
 					?: repo.defaultInitialRoundTimeMs
 		}
 		timerJob?.cancel()
@@ -58,7 +71,7 @@ class MainViewModel @Inject constructor(
 				},
 				onFinished = {
 					_timerPhaseState.value = TimerPhase.IDLE
-					targetSteepTimeMs += repo.additionalTimeOptions.firstOrNull { it.id == additionalTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
+					targetSteepTimeMs += repo.additionalTimeOptions.firstOrNull { it.id == _additionalTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
 						?: repo.defaultInitialRoundTimeMs
 					_targetSteepTimeMsState.value = targetSteepTimeMs
 					_keepScreenOnState.value = false
@@ -90,8 +103,8 @@ class MainViewModel @Inject constructor(
 		_steepCountState.value = 0
 		_targetSteepTimeMsState.value = repo.defaultInitialRoundTimeMs
 		_steepRoundProgressMsState.value = 0L
-		startTimeDropdownCoordinator.onOptionSelected(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.defaultInitialRoundTimeMs })
-		additionalTimeDropdownCoordinator.onOptionSelected(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.defaultAdditionalRoundTimeMs })
+		_startTimeDropdownCoordinator.onOptionSelected(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.defaultInitialRoundTimeMs })
+		_additionalTimeDropdownCoordinator.onOptionSelected(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.defaultAdditionalRoundTimeMs })
 		_keepScreenOnState.value = false
 	}
 
@@ -102,7 +115,7 @@ class MainViewModel @Inject constructor(
 	//  region Dropdown state/options
 	/////////////////////////////////////////////////
 
-	val startTimeDropdownCoordinator = ReadOnlyDropdownCoordinator(
+	private val _startTimeDropdownCoordinator = ReadOnlyDropdownCoordinator(
 		selectedOptionState = mutableStateOf(repo.startTimeOptions.firstOrNull { it.timeValueMs == repo.defaultInitialRoundTimeMs }),
 		dropdownOptionsState = mutableStateOf(repo.startTimeOptions),
 		externalOnOptionSelected = { option ->
@@ -113,7 +126,7 @@ class MainViewModel @Inject constructor(
 		}
 	)
 
-	val additionalTimeDropdownCoordinator = ReadOnlyDropdownCoordinator(
+	private val _additionalTimeDropdownCoordinator = ReadOnlyDropdownCoordinator(
 		selectedOptionState = mutableStateOf(repo.additionalTimeOptions.firstOrNull { it.timeValueMs == repo.defaultAdditionalRoundTimeMs }),
 		dropdownOptionsState = mutableStateOf(repo.additionalTimeOptions),
 	)
@@ -127,7 +140,6 @@ class MainViewModel @Inject constructor(
 
 	// could just go back to having an "isRunning" state now that the countdown ui state is based on negative progress, and roll this into that
 	private val _keepScreenOnState = MutableStateFlow<Boolean>(false)
-	val keepScreenOnState: StateFlow<Boolean> = _keepScreenOnState
 
 	/////////////////////////////////////////////////
 	//  endregion

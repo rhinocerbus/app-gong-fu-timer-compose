@@ -33,21 +33,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.piledrive.app_gong_fu_timer_compose.R
-import com.piledrive.app_gong_fu_timer_compose.data.TimerPhase
 import com.piledrive.app_gong_fu_timer_compose.ui.nav.NavRoute
-import com.piledrive.app_gong_fu_timer_compose.ui.util.previewIntFlow
-import com.piledrive.app_gong_fu_timer_compose.ui.util.previewLongFlow
-import com.piledrive.app_gong_fu_timer_compose.ui.util.previewTimerPhaseFlow
 import com.piledrive.app_gong_fu_timer_compose.viewmodel.MainViewModel
 import com.piledrive.lib_compose_components.ui.appbar.TopAppBarWithOverflow
-import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownCoordinator
 import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownTextField
 import com.piledrive.lib_compose_components.ui.spacer.Gap
 import com.piledrive.lib_compose_components.ui.theme.custom.AppTheme
-import com.piledrive.lib_compose_components.ui.util.KeepScreenOn
 import com.piledrive.lib_compose_components.ui.util.MeasureTextWidth
 import com.piledrive.lib_compose_components.ui.util.ScreenOnWatcher
-import kotlinx.coroutines.flow.StateFlow
 import kotlin.math.absoluteValue
 
 object MainScreen : NavRoute {
@@ -57,37 +50,15 @@ object MainScreen : NavRoute {
 	fun draw(
 		viewModel: MainViewModel,
 	) {
-		ScreenOnWatcher(viewModel.keepScreenOnState)
+		ScreenOnWatcher(viewModel.coordinator.keepScreenOnState)
 		drawContent(
-			viewModel.startTimeDropdownCoordinator,
-			viewModel.additionalTimeDropdownCoordinator,
-			viewModel.timerPhaseState,
-			viewModel.steepCountState,
-			viewModel.steepRoundProgressMsState,
-			viewModel.targetSteepTimeMsState,
-			onStartRound = {
-				viewModel.startSteepingRound()
-			},
-			onCancelRound = {
-				viewModel.cancelRound()
-			},
-			onReset = {
-				viewModel.reset()
-			}
+			viewModel.coordinator,
 		)
 	}
 
 	@Composable
 	fun drawContent(
-		initialTimeCoordinator: ReadOnlyDropdownCoordinator,
-		additionalTimeCoordinator: ReadOnlyDropdownCoordinator,
-		timerPhaseState: StateFlow<TimerPhase>,
-		steepRoundState: StateFlow<Int>,
-		timerRoundProgressState: StateFlow<Long>,
-		targetSteepTimeState: StateFlow<Long>,
-		onStartRound: () -> Unit,
-		onCancelRound: () -> Unit,
-		onReset: () -> Unit,
+		coordinator: MainScreenCoordinator,
 	) {
 		Scaffold(
 			topBar = {
@@ -98,7 +69,7 @@ object MainScreen : NavRoute {
 					overflowActions = {
 						DropdownMenuItem(
 							onClick = {
-								onReset()
+								coordinator.onReset()
 							},
 							text = {
 								Text("Reset")
@@ -111,14 +82,7 @@ object MainScreen : NavRoute {
 				Box(modifier = Modifier.padding(innerPadding)) {
 					DrawBody(
 						Modifier.fillMaxSize(),
-						initialTimeCoordinator,
-						additionalTimeCoordinator,
-						timerPhaseState,
-						steepRoundState,
-						timerRoundProgressState,
-						targetSteepTimeState,
-						onStartRound,
-						onCancelRound
+						coordinator,
 					)
 				}
 			}
@@ -128,18 +92,11 @@ object MainScreen : NavRoute {
 	@Composable
 	private fun DrawBody(
 		modifier: Modifier = Modifier,
-		initialTimeCoordinator: ReadOnlyDropdownCoordinator,
-		additionalTimeCoordinator: ReadOnlyDropdownCoordinator,
-		timerPhaseState: StateFlow<TimerPhase>,
-		steepRoundState: StateFlow<Int>,
-		timerRoundProgressState: StateFlow<Long>,
-		targetSteepTimeState: StateFlow<Long>,
-		onStartRound: () -> Unit,
-		onCancelRound: () -> Unit,
+		coordinator: MainScreenCoordinator,
 	) {
-		val steepRound = steepRoundState.collectAsState().value
-		val steepRunning = timerPhaseState.collectAsState().value.isActive
-		val targetTime = targetSteepTimeState.collectAsState().value
+		val steepRound = coordinator.steepCountState.collectAsState().value
+		val steepRunning = coordinator.timerPhaseState.collectAsState().value.isActive
+		val targetTime = coordinator.targetSteepTimeMsState.collectAsState().value
 
 		val amountW =
 			MeasureTextWidth("00000s", MaterialTheme.typography.bodySmall, TextPaint())
@@ -151,7 +108,7 @@ object MainScreen : NavRoute {
 					Gap(8.dp)
 					ReadOnlyDropdownTextField(
 						innerTextFieldModifier = Modifier.width(amountW.dp),
-						coordinator = initialTimeCoordinator,
+						coordinator = coordinator.startTimeDropdownCoordinator,
 						enabled = steepRound == 0
 					)
 				}
@@ -161,7 +118,7 @@ object MainScreen : NavRoute {
 					Gap(8.dp)
 					ReadOnlyDropdownTextField(
 						innerTextFieldModifier = Modifier.width(amountW.dp),
-						coordinator = additionalTimeCoordinator,
+						coordinator = coordinator.additionalTimeDropdownCoordinator,
 						enabled = steepRound == 0
 					)
 				}
@@ -192,17 +149,14 @@ object MainScreen : NavRoute {
 						Modifier
 							.fillMaxWidth(0.8f)
 							.aspectRatio(1f),
-						timerPhaseState,
-						timerRoundProgressState,
-						targetSteepTimeState,
-						onCancelRound
+						coordinator,
 					)
 				} else {
 					Button(
 						modifier = Modifier
 							.fillMaxWidth(0.8f)
 							.aspectRatio(1f),
-						onClick = { onStartRound() }
+						onClick = { coordinator.onStartRound() }
 					) {
 						Icon(
 							modifier = Modifier.fillMaxSize(0.75f),
@@ -218,13 +172,10 @@ object MainScreen : NavRoute {
 	@Composable
 	fun DrawTimer(
 		modifier: Modifier = Modifier,
-		timerPhaseState: StateFlow<TimerPhase>,
-		timerRoundProgressState: StateFlow<Long>,
-		targetSteepTimeState: StateFlow<Long>,
-		onCancelRound: () -> Unit
+		coordinator: MainScreenCoordinator,
 	) {
-		val timerProgress = timerRoundProgressState.collectAsState().value
-		val targetTime = targetSteepTimeState.collectAsState().value
+		val timerProgress = coordinator.steepRoundProgressMsState.collectAsState().value
+		val targetTime = coordinator.targetSteepTimeMsState.collectAsState().value
 		//val inCountdown = timerPhaseState.collectAsState().value == TimerPhase.COUNTDOWN
 		val inCountdown = timerProgress < 0
 
@@ -251,7 +202,7 @@ object MainScreen : NavRoute {
 			}
 			Gap(8.dp)
 			IconButton(onClick = {
-				onCancelRound()
+				coordinator.onCancelRound()
 			}) {
 				Icon(Icons.Default.Clear, "cancel current steeping")
 			}
@@ -265,15 +216,7 @@ object MainScreen : NavRoute {
 fun MainPreview() {
 	AppTheme {
 		MainScreen.drawContent(
-			initialTimeCoordinator = ReadOnlyDropdownCoordinator(),
-			additionalTimeCoordinator = ReadOnlyDropdownCoordinator(),
-			timerPhaseState = previewTimerPhaseFlow(),
-			steepRoundState = previewIntFlow(1),
-			timerRoundProgressState = previewLongFlow(8000L),
-			targetSteepTimeState = previewLongFlow(20000L),
-			onStartRound = {},
-			onCancelRound = {},
-			onReset = {}
+			stubMainScreenCoordinator,
 		)
 	}
 }
