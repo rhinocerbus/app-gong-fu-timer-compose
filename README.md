@@ -11,6 +11,6 @@ Just Compose, coroutines.
 
 ## Additional todo:
 - [x] add a countdown for the round starting to give time to start pouring water after click
-- [ ] keep screen on when timer is running
+- [x] keep screen on when timer is running
 - [ ] could use a sound or haptic when timer is done
 An additional layer of features could be added, including a local/remote db to store settings for tea types provided by the user, with local storage for last tea selected, plus tracking most-brewed teas. Since this is a personal-use tool, I don't particularly care to have that feature set at the momnet.

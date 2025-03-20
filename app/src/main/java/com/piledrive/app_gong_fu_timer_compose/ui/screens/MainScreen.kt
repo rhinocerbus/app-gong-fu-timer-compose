@@ -44,7 +44,9 @@ import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdow
 import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownTextField
 import com.piledrive.lib_compose_components.ui.spacer.Gap
 import com.piledrive.lib_compose_components.ui.theme.custom.AppTheme
+import com.piledrive.lib_compose_components.ui.util.KeepScreenOn
 import com.piledrive.lib_compose_components.ui.util.MeasureTextWidth
+import com.piledrive.lib_compose_components.ui.util.ScreenOnWatcher
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.math.absoluteValue
 
@@ -55,6 +57,7 @@ object MainScreen : NavRoute {
 	fun draw(
 		viewModel: MainViewModel,
 	) {
+		ScreenOnWatcher(viewModel.keepScreenOnState)
 		drawContent(
 			viewModel.startTimeDropdownCoordinator,
 			viewModel.additionalTimeDropdownCoordinator,
