@@ -13,21 +13,21 @@ import javax.inject.Inject
 class TimerRepo @Inject constructor(
 	//private val settingsSource: LocalSettingsSource
 ) {
-	val defaultAdditionalRoundTimeMs = 10000L
-	val defaultInitialRoundTimeMs = 20000L
-	val defaultCountdownMs = 3000L
+	companion object {
+		val defaultCountdownMs = 3000L
+	}
 
 	val startTimeOptions = listOf(
 		TimeOption("10s", timeValueMs = 10000L),
 		TimeOption("15s", timeValueMs = 15000L),
-		TimeOption("20s", timeValueMs = 20000L),
+		TimeOption("20s", timeValueMs = 20000L, default = true),
 		TimeOption("25s", timeValueMs = 25000L),
 		TimeOption("30s", timeValueMs = 30000L),
 	)
 
 	val additionalTimeOptions = listOf(
 		TimeOption("5s", timeValueMs = 5000L),
-		TimeOption("10s", timeValueMs = 10000L),
+		TimeOption("10s", timeValueMs = 10000L, default = true),
 		TimeOption("15s", timeValueMs = 15000L),
 		TimeOption("20s", timeValueMs = 20000L),
 	)
