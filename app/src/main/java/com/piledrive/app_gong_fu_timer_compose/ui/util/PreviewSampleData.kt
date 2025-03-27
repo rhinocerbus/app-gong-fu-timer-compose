@@ -1,6 +1,5 @@
 package com.piledrive.app_gong_fu_timer_compose.ui.util
 
-import com.piledrive.app_gong_fu_timer_compose.data.TimerPhase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -23,8 +22,10 @@ fun previewLongFlow(
 	return MutableStateFlow(value)
 }
 
+/* class (temporarily?) sunsetted
 fun previewTimerPhaseFlow(
 	value: TimerPhase = TimerPhase.INITIAL
-): StateFlow<TimerPhase> {
+): StateFlow<Boolean> {
 	return MutableStateFlow(value)
 }
+*/

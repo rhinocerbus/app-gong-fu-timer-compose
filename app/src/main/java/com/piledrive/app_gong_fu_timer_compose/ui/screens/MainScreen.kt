@@ -50,7 +50,7 @@ object MainScreen : NavRoute {
 	fun draw(
 		viewModel: MainViewModel,
 	) {
-		ScreenOnWatcher(viewModel.coordinator.keepScreenOnState)
+		ScreenOnWatcher(viewModel.coordinator.timerRunningState)
 		drawContent(
 			viewModel.coordinator,
 		)
@@ -95,7 +95,7 @@ object MainScreen : NavRoute {
 		coordinator: MainScreenCoordinatorImpl,
 	) {
 		val steepRound = coordinator.steepCountState.collectAsState().value
-		val steepRunning = coordinator.timerPhaseState.collectAsState().value.isActive
+		val steepRunning = coordinator.timerRunningState.collectAsState().value
 		val targetTime = coordinator.targetSteepTimeMsState.collectAsState().value
 
 		val amountW =
