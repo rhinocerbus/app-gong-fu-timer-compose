@@ -36,12 +36,14 @@ class MainScreenCoordinator(
 	private val startTimeOptions: List<TimeOption>,
 	private val additionalTimeOptions: List<TimeOption>,
 ) : MainScreenCoordinatorImpl {
-
-
 	override val startTimeDropdownCoordinator = ReadOnlyDropdownCoordinator(
 		selectedOptionState = mutableStateOf(startTimeOptions.firstOrNull { it.default }),
 		dropdownOptionsState = mutableStateOf(startTimeOptions),
 		externalOnOptionSelected = { option ->
+			/*
+				at the moment at least, this seems to be the main sticking point in favor of having the nested coordinators - not
+					wanting to expose changing the target time based on state externally
+			 */
 			if (_steepCountState.value == 0) {
 				_targetSteepTimeMsState.value =
 					startTimeOptions.firstOrNull { it.id == option?.id }?.timeValueMs ?: throw(IllegalStateException("unable to find specified time option"))
