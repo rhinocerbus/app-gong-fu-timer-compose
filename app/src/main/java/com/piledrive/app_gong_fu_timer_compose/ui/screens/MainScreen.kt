@@ -58,7 +58,7 @@ object MainScreen : NavRoute {
 
 	@Composable
 	fun drawContent(
-		coordinator: MainScreenCoordinator,
+		coordinator: MainScreenCoordinatorImpl,
 	) {
 		Scaffold(
 			topBar = {
@@ -92,7 +92,7 @@ object MainScreen : NavRoute {
 	@Composable
 	private fun DrawBody(
 		modifier: Modifier = Modifier,
-		coordinator: MainScreenCoordinator,
+		coordinator: MainScreenCoordinatorImpl,
 	) {
 		val steepRound = coordinator.steepCountState.collectAsState().value
 		val steepRunning = coordinator.timerPhaseState.collectAsState().value.isActive
@@ -172,7 +172,7 @@ object MainScreen : NavRoute {
 	@Composable
 	fun DrawTimer(
 		modifier: Modifier = Modifier,
-		coordinator: MainScreenCoordinator,
+		coordinator: MainScreenCoordinatorImpl,
 	) {
 		val timerProgress = coordinator.steepRoundProgressMsState.collectAsState().value
 		val targetTime = coordinator.targetSteepTimeMsState.collectAsState().value
