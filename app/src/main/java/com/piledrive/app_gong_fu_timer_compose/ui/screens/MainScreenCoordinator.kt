@@ -1,26 +1,23 @@
 package com.piledrive.app_gong_fu_timer_compose.ui.screens
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import com.piledrive.app_gong_fu_timer_compose.data.TimeOption
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewBooleanFlow
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewIntFlow
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewLongFlow
-import com.piledrive.app_gong_fu_timer_compose.util.tickerFlowWithCountdownCallbacksOnly
+import com.piledrive.lib_compose_components.ui.coordinators.TimerCoordinator
 import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownCoordinator
+import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownCoordinatorGeneric
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 
 interface MainScreenCoordinatorImpl {
 	val startTimeDropdownCoordinator: ReadOnlyDropdownCoordinator
 	val additionalTimeDropdownCoordinator: ReadOnlyDropdownCoordinator
-	val timerRunningState: StateFlow<Boolean>
+	val steepTimerCoordinator: TimerCoordinator
 	val steepCountState: StateFlow<Int>
-	val targetSteepTimeMsState: StateFlow<Long>
-	val steepRoundProgressMsState: StateFlow<Long>
 	val onStartRound: () -> Unit
 	val onCancelRound: () -> Unit
 	val onReset: () -> Unit
@@ -54,25 +51,29 @@ class MainScreenCoordinator(
 		dropdownOptionsState = mutableStateOf(additionalTimeOptions),
 	)
 
+	override val steepTimerCoordinator: TimerCoordinator = TimerCoordinator(
+		viewModelScope,
+		3000L,
+		onTimerStarted = {
+			// had this in onDelayCompleted but would cause problems with cancelling during the countdown and decrementing
+			// now we don't need onDelayCompleted at all
+			_steepCountState.value += 1
+		},
+		onTimerFinished = {
+
+		}
+	)
+
 	private val defaultStartTimeMs = startTimeOptions.firstOrNull { it.default }?.timeValueMs
 		?: throw (IllegalArgumentException("no default start time option defined"))
 	private val defaultAdditionalTimeMs = startTimeOptions.firstOrNull { it.default }?.timeValueMs
 		?: throw (IllegalArgumentException("no default additional time option defined"))
 
 
-	override val timerRunningState: StateFlow<Boolean>
-		get() = _timerRunningState
 	override val steepCountState: StateFlow<Int>
 		get() = _steepCountState
-	override val targetSteepTimeMsState: StateFlow<Long>
-		get() = _targetSteepTimeMsState
-	override val steepRoundProgressMsState: StateFlow<Long>
-		get() = _steepRoundProgressMsState
 
-	private val _timerRunningState = MutableStateFlow<Boolean>(false)
 	private val _steepCountState = MutableStateFlow<Int>(0)
-	private val _targetSteepTimeMsState = MutableStateFlow<Long>(defaultStartTimeMs)
-	private val _steepRoundProgressMsState = MutableStateFlow<Long>(0)
 
 	override val onStartRound: () -> Unit = {
 		startRound()
@@ -86,52 +87,20 @@ class MainScreenCoordinator(
 
 	private var timerJob: Job? = null
 	private fun startRound() {
-		if (_targetSteepTimeMsState.value <= 0) {
-			_targetSteepTimeMsState.value =
-				startTimeOptions.firstOrNull { it.id == startTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
-					?: defaultStartTimeMs
 		}
-		timerJob?.cancel()
-		timerJob = viewModelScope.launch {
-			tickerFlowWithCountdownCallbacksOnly(
-				initialDelayMs = countdownTimeMs,
-				durationMs = _targetSteepTimeMsState.value,
-				onStarted = {
-					_timerRunningState.value = true
-					// had this in onDelayCompleted but would cause problems with cancelling during the countdown and decrementing
-					// now we don't need onDelayCompleted at all
-					_steepCountState.value += 1
-				},
-				onFinished = {
-					_timerRunningState.value = false
-					var prevTime = _targetSteepTimeMsState.value
-					prevTime += additionalTimeOptions.firstOrNull { it.id == additionalTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
-						?: throw (IllegalStateException("missing additional per-round time selection mid-session"))
-					_targetSteepTimeMsState.value = prevTime
-					doTimerDoneHaptics()
-				},
-				onTick = { progress ->
-					Log.d("VM", "prg: $progress")
-					_steepRoundProgressMsState.value = progress
-				}
-			).collect { }
-		}
+		steepTimerCoordinator.startTimer()
 	}
 
 	private fun cancelRound() {
-		if (!_timerRunningState.value) return
-		timerJob?.cancel()
-		_timerRunningState.value = false
+		if (!steepTimerCoordinator.timerRunningState.value) return
+		steepTimerCoordinator.cancel()
 		_steepCountState.value -= 1
-		_steepRoundProgressMsState.value = 0L
 	}
 
 	private fun reset() {
 		timerJob?.cancel()
-		_timerRunningState.value = false
+		steepTimerCoordinator.cancel()
 		_steepCountState.value = 0
-		_targetSteepTimeMsState.value = -1L
-		_steepRoundProgressMsState.value = -1L
 		startTimeDropdownCoordinator.onOptionSelected(startTimeOptions.firstOrNull { it.default })
 		additionalTimeDropdownCoordinator.onOptionSelected(additionalTimeOptions.firstOrNull { it.default })
 	}
@@ -140,10 +109,8 @@ class MainScreenCoordinator(
 val stubMainScreenCoordinator = object : MainScreenCoordinatorImpl {
 	override val startTimeDropdownCoordinator: ReadOnlyDropdownCoordinator = ReadOnlyDropdownCoordinator()
 	override val additionalTimeDropdownCoordinator: ReadOnlyDropdownCoordinator = ReadOnlyDropdownCoordinator()
-	override val timerRunningState: StateFlow<Boolean> = previewBooleanFlow(false)
+	override val steepTimerCoordinator: TimerCoordinator = TimerCoordinator()
 	override val steepCountState: StateFlow<Int> = previewIntFlow(1)
-	override val targetSteepTimeMsState: StateFlow<Long> = previewLongFlow(8000L)
-	override val steepRoundProgressMsState: StateFlow<Long> = previewLongFlow(20000L)
 	override val onStartRound: () -> Unit = {}
 	override val onCancelRound: () -> Unit = {}
 	override val onReset: () -> Unit = {}
