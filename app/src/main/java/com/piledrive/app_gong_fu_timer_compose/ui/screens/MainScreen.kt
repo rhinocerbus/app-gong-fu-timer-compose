@@ -36,7 +36,6 @@ import com.piledrive.app_gong_fu_timer_compose.R
 import com.piledrive.app_gong_fu_timer_compose.ui.nav.NavRoute
 import com.piledrive.app_gong_fu_timer_compose.viewmodel.MainViewModel
 import com.piledrive.lib_compose_components.ui.appbar.TopAppBarWithOverflow
-import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownTextField
 import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownTextFieldGeneric
 import com.piledrive.lib_compose_components.ui.spacer.Gap
 import com.piledrive.lib_compose_components.ui.theme.custom.AppTheme
@@ -97,7 +96,7 @@ object MainScreen : NavRoute {
 	) {
 		val steepRound = coordinator.steepCountState.collectAsState().value
 		val steepRunning = coordinator.steepTimerCoordinator.timerRunningState.collectAsState().value
-		val targetTime = coordinator.steepTimerCoordinator.targetTimeMsState.collectAsState().value
+		val targetTime = coordinator.steepTimerCoordinator.timerDurationMsState.collectAsState().value
 
 		val amountW =
 			MeasureTextWidth("00000s", MaterialTheme.typography.bodySmall, TextPaint())
@@ -178,7 +177,7 @@ object MainScreen : NavRoute {
 		coordinator: MainScreenCoordinatorImpl,
 	) {
 		val timerProgress = coordinator.steepTimerCoordinator.timerProgressMsState.collectAsState().value
-		val targetTime = coordinator.steepTimerCoordinator.targetTimeMsState.collectAsState().value
+		val targetTime = coordinator.steepTimerCoordinator.timerDurationMsState.collectAsState().value
 		//val inCountdown = timerPhaseState.collectAsState().value == TimerPhase.COUNTDOWN
 		val inCountdown = timerProgress < 0
 
