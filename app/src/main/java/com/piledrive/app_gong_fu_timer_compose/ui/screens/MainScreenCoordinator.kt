@@ -31,6 +31,7 @@ class MainScreenCoordinator(
 	private val countdownTimeMs: Long,
 	private val startTimeOptions: List<TimeOption>,
 	private val additionalTimeOptions: List<TimeOption>,
+	private val doTimerDoneHaptics: () -> Unit
 ) : MainScreenCoordinatorImpl {
 	override val startTimeDropdownCoordinator = ReadOnlyDropdownCoordinator(
 		selectedOptionState = mutableStateOf(startTimeOptions.firstOrNull { it.default }),
@@ -107,6 +108,7 @@ class MainScreenCoordinator(
 					prevTime += additionalTimeOptions.firstOrNull { it.id == additionalTimeDropdownCoordinator.selectedOptionState.value?.id }?.timeValueMs
 						?: throw (IllegalStateException("missing additional per-round time selection mid-session"))
 					_targetSteepTimeMsState.value = prevTime
+					doTimerDoneHaptics()
 				},
 				onTick = { progress ->
 					Log.d("VM", "prg: $progress")
