@@ -37,6 +37,7 @@ import com.piledrive.app_gong_fu_timer_compose.ui.nav.NavRoute
 import com.piledrive.app_gong_fu_timer_compose.viewmodel.MainViewModel
 import com.piledrive.lib_compose_components.ui.appbar.TopAppBarWithOverflow
 import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownTextField
+import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownTextFieldGeneric
 import com.piledrive.lib_compose_components.ui.spacer.Gap
 import com.piledrive.lib_compose_components.ui.theme.custom.AppTheme
 import com.piledrive.lib_compose_components.ui.util.MeasureTextWidth
@@ -50,7 +51,7 @@ object MainScreen : NavRoute {
 	fun draw(
 		viewModel: MainViewModel,
 	) {
-		ScreenOnWatcher(viewModel.coordinator.timerRunningState)
+		ScreenOnWatcher(viewModel.coordinator.steepTimerCoordinator.timerRunningState)
 		drawContent(
 			viewModel.coordinator,
 		)
@@ -95,8 +96,8 @@ object MainScreen : NavRoute {
 		coordinator: MainScreenCoordinatorImpl,
 	) {
 		val steepRound = coordinator.steepCountState.collectAsState().value
-		val steepRunning = coordinator.timerRunningState.collectAsState().value
-		val targetTime = coordinator.targetSteepTimeMsState.collectAsState().value
+		val steepRunning = coordinator.steepTimerCoordinator.timerRunningState.collectAsState().value
+		val targetTime = coordinator.steepTimerCoordinator.targetTimeMsState.collectAsState().value
 
 		val amountW =
 			MeasureTextWidth("00000s", MaterialTheme.typography.bodySmall, TextPaint())
@@ -106,9 +107,10 @@ object MainScreen : NavRoute {
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
 					Text("Initial steep time", textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
 					Gap(8.dp)
-					ReadOnlyDropdownTextField(
+					ReadOnlyDropdownTextFieldGeneric(
 						innerTextFieldModifier = Modifier.width(amountW.dp),
 						coordinator = coordinator.startTimeDropdownCoordinator,
+						selectionToValueMutator = { it.textValue ?: ""},
 						enabled = steepRound == 0
 					)
 				}
@@ -116,9 +118,10 @@ object MainScreen : NavRoute {
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
 					Text("Added time per round", textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
 					Gap(8.dp)
-					ReadOnlyDropdownTextField(
+					ReadOnlyDropdownTextFieldGeneric(
 						innerTextFieldModifier = Modifier.width(amountW.dp),
 						coordinator = coordinator.additionalTimeDropdownCoordinator,
+						selectionToValueMutator = { it.textValue ?: ""},
 						enabled = steepRound == 0
 					)
 				}
@@ -174,8 +177,8 @@ object MainScreen : NavRoute {
 		modifier: Modifier = Modifier,
 		coordinator: MainScreenCoordinatorImpl,
 	) {
-		val timerProgress = coordinator.steepRoundProgressMsState.collectAsState().value
-		val targetTime = coordinator.targetSteepTimeMsState.collectAsState().value
+		val timerProgress = coordinator.steepTimerCoordinator.timerProgressMsState.collectAsState().value
+		val targetTime = coordinator.steepTimerCoordinator.targetTimeMsState.collectAsState().value
 		//val inCountdown = timerPhaseState.collectAsState().value == TimerPhase.COUNTDOWN
 		val inCountdown = timerProgress < 0
 

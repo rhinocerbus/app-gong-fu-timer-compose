@@ -14,8 +14,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 interface MainScreenCoordinatorImpl {
-	val startTimeDropdownCoordinator: ReadOnlyDropdownCoordinator
-	val additionalTimeDropdownCoordinator: ReadOnlyDropdownCoordinator
+	// change to typed, use timeoption directly, get rid of filtering to get curent seelction and jus tht ethe coordinator states
+	val startTimeDropdownCoordinator: ReadOnlyDropdownCoordinatorGeneric<TimeOption>
+	val additionalTimeDropdownCoordinator: ReadOnlyDropdownCoordinatorGeneric<TimeOption>
 	val steepTimerCoordinator: TimerCoordinator
 	val steepCountState: StateFlow<Int>
 	val onStartRound: () -> Unit
@@ -30,7 +31,7 @@ class MainScreenCoordinator(
 	private val additionalTimeOptions: List<TimeOption>,
 	private val doTimerDoneHaptics: () -> Unit
 ) : MainScreenCoordinatorImpl {
-	override val startTimeDropdownCoordinator = ReadOnlyDropdownCoordinator(
+	override val startTimeDropdownCoordinator = ReadOnlyDropdownCoordinatorGeneric<TimeOption>(
 		selectedOptionState = mutableStateOf(startTimeOptions.firstOrNull { it.default }),
 		dropdownOptionsState = mutableStateOf(startTimeOptions),
 		externalOnOptionSelected = { option ->
@@ -39,14 +40,13 @@ class MainScreenCoordinator(
 					wanting to expose changing the target time based on state externally
 			 */
 			if (_steepCountState.value == 0) {
-				_targetSteepTimeMsState.value =
-					startTimeOptions.firstOrNull { it.id == option?.id }?.timeValueMs
-						?: throw (IllegalStateException("unable to find specified time option"))
+				val updTime = option?.timeValueMs ?: throw (IllegalStateException("unable to find specified time option"))
+				steepTimerCoordinator.updateTimerDuration(updTime)
 			}
 		}
 	)
 
-	override val additionalTimeDropdownCoordinator = ReadOnlyDropdownCoordinator(
+	override val additionalTimeDropdownCoordinator = ReadOnlyDropdownCoordinatorGeneric<TimeOption>(
 		selectedOptionState = mutableStateOf(additionalTimeOptions.firstOrNull { it.default }),
 		dropdownOptionsState = mutableStateOf(additionalTimeOptions),
 	)
@@ -87,6 +87,9 @@ class MainScreenCoordinator(
 
 	private var timerJob: Job? = null
 	private fun startRound() {
+		if (steepTimerCoordinator.targetTimeMsState.value <= 0) {
+			val updTime = startTimeDropdownCoordinator.selectedOptionState.value?.timeValueMs ?: defaultStartTimeMs
+			steepTimerCoordinator.updateTimerDuration(updTime)
 		}
 		steepTimerCoordinator.startTimer()
 	}
@@ -107,8 +110,8 @@ class MainScreenCoordinator(
 }
 
 val stubMainScreenCoordinator = object : MainScreenCoordinatorImpl {
-	override val startTimeDropdownCoordinator: ReadOnlyDropdownCoordinator = ReadOnlyDropdownCoordinator()
-	override val additionalTimeDropdownCoordinator: ReadOnlyDropdownCoordinator = ReadOnlyDropdownCoordinator()
+	override val startTimeDropdownCoordinator: ReadOnlyDropdownCoordinatorGeneric<TimeOption> = ReadOnlyDropdownCoordinatorGeneric<TimeOption>()
+	override val additionalTimeDropdownCoordinator: ReadOnlyDropdownCoordinatorGeneric<TimeOption> = ReadOnlyDropdownCoordinatorGeneric<TimeOption>()
 	override val steepTimerCoordinator: TimerCoordinator = TimerCoordinator()
 	override val steepCountState: StateFlow<Int> = previewIntFlow(1)
 	override val onStartRound: () -> Unit = {}
