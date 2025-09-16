@@ -1,10 +1,9 @@
 package com.piledrive.app_gong_fu_timer_compose.ui.screens
 
-import androidx.compose.runtime.mutableStateOf
 import com.piledrive.app_gong_fu_timer_compose.data.TimeOption
 import com.piledrive.app_gong_fu_timer_compose.ui.util.previewIntFlow
 import com.piledrive.lib_compose_components.ui.coordinators.TimerCoordinator
-import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownCoordinatorGeneric
+import com.piledrive.lib_compose_components.ui.dropdown.readonly.singleselect.ReadOnlyDropdownCoordinatorGeneric
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,8 +28,14 @@ class MainScreenCoordinator(
 	private val doTimerDoneHaptics: () -> Unit
 ) : MainScreenCoordinatorImpl {
 	override val startTimeDropdownCoordinator = ReadOnlyDropdownCoordinatorGeneric<TimeOption>(
-		selectedOptionState = mutableStateOf(startTimeOptions.firstOrNull { it.default }),
-		dropdownOptionsState = mutableStateOf(startTimeOptions),
+		initSelectedOption = startTimeOptions.firstOrNull { it.default },
+		initDropdownOptions = startTimeOptions,
+		optionIdForSelectedCheck = { option ->
+			option.id.toString()
+		},
+		optionTextMutator = { option ->
+			option.textValue ?: ""
+		},
 		externalOnOptionSelected = { option ->
 			/*
 				at the moment at least, this seems to be the main sticking point in favor of having the nested coordinators - not
@@ -40,12 +45,20 @@ class MainScreenCoordinator(
 				val updTime = option?.timeValueMs ?: throw (IllegalStateException("unable to find specified time option"))
 				steepTimerCoordinator.updateTimerDuration(updTime)
 			}
-		}
+		},
+		showSelectedState = true
 	)
 
 	override val additionalTimeDropdownCoordinator = ReadOnlyDropdownCoordinatorGeneric<TimeOption>(
-		selectedOptionState = mutableStateOf(additionalTimeOptions.firstOrNull { it.default }),
-		dropdownOptionsState = mutableStateOf(additionalTimeOptions),
+		initSelectedOption = additionalTimeOptions.firstOrNull { it.default },
+		initDropdownOptions = additionalTimeOptions,
+		optionIdForSelectedCheck = { option ->
+			option.id.toString()
+		},
+		optionTextMutator = { option ->
+			option.textValue ?: ""
+		},
+		showSelectedState = true
 	)
 
 	override val steepTimerCoordinator: TimerCoordinator = TimerCoordinator(

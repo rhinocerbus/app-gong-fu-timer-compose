@@ -33,10 +33,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.piledrive.app_gong_fu_timer_compose.R
+import com.piledrive.app_gong_fu_timer_compose.data.TimeOption
 import com.piledrive.app_gong_fu_timer_compose.ui.nav.NavRoute
 import com.piledrive.app_gong_fu_timer_compose.viewmodel.MainViewModel
 import com.piledrive.lib_compose_components.ui.appbar.TopAppBarWithOverflow
-import com.piledrive.lib_compose_components.ui.dropdown.readonly.ReadOnlyDropdownTextFieldGeneric
+import com.piledrive.lib_compose_components.ui.dropdown.readonly.singleselect.ReadOnlyDropdownTextFieldGeneric
 import com.piledrive.lib_compose_components.ui.spacer.Gap
 import com.piledrive.lib_compose_components.ui.theme.custom.AppTheme
 import com.piledrive.lib_compose_components.ui.util.MeasureTextWidth
@@ -106,10 +107,10 @@ object MainScreen : NavRoute {
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
 					Text("Initial steep time", textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
 					Gap(8.dp)
-					ReadOnlyDropdownTextFieldGeneric(
+					ReadOnlyDropdownTextFieldGeneric<TimeOption>(
 						innerTextFieldModifier = Modifier.width(amountW.dp),
 						coordinator = coordinator.startTimeDropdownCoordinator,
-						selectionToValueMutator = { it.textValue ?: ""},
+						//selectionToValueMutator = { it.textValue ?: ""},
 						enabled = steepRound == 0
 					)
 				}
@@ -117,10 +118,10 @@ object MainScreen : NavRoute {
 				Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
 					Text("Added time per round", textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
 					Gap(8.dp)
-					ReadOnlyDropdownTextFieldGeneric(
+					ReadOnlyDropdownTextFieldGeneric<TimeOption>(
 						innerTextFieldModifier = Modifier.width(amountW.dp),
 						coordinator = coordinator.additionalTimeDropdownCoordinator,
-						selectionToValueMutator = { it.textValue ?: ""},
+						//selectionToValueMutator = { it.textValue ?: ""},
 						enabled = steepRound == 0
 					)
 				}
